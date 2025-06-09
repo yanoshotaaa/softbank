@@ -386,9 +386,21 @@ class PokerAnalysisProvider extends ChangeNotifier {
           final winners = handData['winnerInfo']['winners'] as List;
           final isWinner = winners.any((w) => 
             w['name'] == userPlayer['playerInfo']['name'] || 
-            (userPlayer['playerInfo']['isUser'] == true)
+            w['name'] == "あなた" ||
+            (w['position'] == userPlayer['playerInfo']['position'] && userPlayer['playerInfo']['isUser'] == true)
           );
           result = isWinner ? 'win' : 'loss';
+          
+          // Additional check: if user won any amount, consider it a win
+          if (!isWinner) {
+            final userWinner = winners.firstWhere(
+              (w) => w['name'] == userPlayer['playerInfo']['name'] || w['name'] == "あなた",
+              orElse: () => null,
+            );
+            if (userWinner != null && userWinner['amountWon'] != null && userWinner['amountWon'] > 0) {
+              result = 'win';
+            }
+          }
         }
 
         // Calculate pot size and street pots
@@ -521,7 +533,7 @@ class PokerAnalysisProvider extends ChangeNotifier {
             folded: true,
           ),
         ],
-        result: 'win',
+        result: 'win', // 修正: デモデータは勝利に変更
         potSize: 18,
         streetPots: {
           'preflop': 4,
