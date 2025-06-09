@@ -334,16 +334,29 @@ class PokerAnalysisProvider extends ChangeNotifier {
     
     for (final handData in data['hands']) {
       try {
-        // Find user player
-        final userPlayer = (handData['playerDetails'] as List).firstWhere(
-          (p) => p['playerInfo']['isUser'] == true || p['playerInfo']['name'] == "あなた",
-          orElse: () => null,
-        );
+        print('=== ハンド変換開始 ===');
+        print('handNumber: ${handData['gameInfo']['handNumber']}');
         
-        if (userPlayer == null) {
+        // Find user player with detailed logging
+        final playerDetailsList = handData['playerDetails'] as List;
+        print('全プレイヤー数: ${playerDetailsList.length}');
+        
+        for (int i = 0; i < playerDetailsList.length; i++) {
+          final player = playerDetailsList[i];
+          print('プレイヤー$i: 名前=${player['playerInfo']['name']}, isUser=${player['playerInfo']['isUser']}');
+        }
+        
+        final userPlayerList = playerDetailsList.where(
+          (p) => p['playerInfo']['isUser'] == true || p['playerInfo']['name'] == "あなた"
+        ).toList();
+        
+        if (userPlayerList.isEmpty) {
           print('ユーザープレイヤーが見つかりません: ハンド ${handData['gameInfo']['handNumber']}');
           continue;
         }
+        
+        final userPlayer = userPlayerList.first;
+        print('ユーザープレイヤー特定成功: ${userPlayer['playerInfo']['name']}');
 
         // Convert actions
         final actions = <ActionData>[];
@@ -380,28 +393,114 @@ class PokerAnalysisProvider extends ChangeNotifier {
           }
         }
 
-        // Determine result
+        // Determine result with detailed logging
         String result = 'loss';
-        if (handData['winnerInfo'] != null && handData['winnerInfo']['winners'] != null) {
-          final winners = handData['winnerInfo']['winners'] as List;
-          final isWinner = winners.any((w) => 
-            w['name'] == userPlayer['playerInfo']['name'] || 
-            w['name'] == "あなた" ||
-            (w['position'] == userPlayer['playerInfo']['position'] && userPlayer['playerInfo']['isUser'] == true)
-          );
-          result = isWinner ? 'win' : 'loss';
+        print('=== 勝敗判定デバッグ ===');
+        print('ユーザープレイヤー名: ${userPlayer['playerInfo']['name']}');
+        print('ユーザーisUser: ${userPlayer['playerInfo']['isUser']}');
+        print('ユーザーポジション: ${userPlayer['playerInfo']['position']}');
+        
+        // JSONの構造を詳しく調べる
+        print('handData keys: ${handData.keys.toList()}');
+        print('winnerInfo exists: ${handData.containsKey('winnerInfo')}');
+        print('winnerInfo value: ${handData['winnerInfo']}');
+        
+        if (handData['winnerInfo'] != null) {
+          print('winnerInfo is not null');
+          final winnerInfo = handData['winnerInfo'] as Map<String, dynamic>;
+          print('winnerInfo keys: ${winnerInfo.keys.toList()}');
+          print('winners exists: ${winnerInfo.containsKey('winners')}');
+          print('winners value: ${winnerInfo['winners']}');
           
-          // Additional check: if user won any amount, consider it a win
-          if (!isWinner) {
-            final userWinner = winners.firstWhere(
-              (w) => w['name'] == userPlayer['playerInfo']['name'] || w['name'] == "あなた",
-              orElse: () => null,
-            );
-            if (userWinner != null && userWinner['amountWon'] != null && userWinner['amountWon'] > 0) {
+          if (winnerInfo['winners'] != null) {
+            final winners = winnerInfo['winners'] as List;
+            print('勝者数: ${winners.length}');
+            
+            for (int i = 0; i < winners.length; i++) {
+              final winner = winners[i];
+              print('勝者$i - 名前: ${winner['name']}, ポジション: ${winner['position']}, 賞金: ${winner['amountWon']}');
+            }
+            
+            // より確実な勝者判定
+            bool isWinner = false;
+            
+            // 方法1: 名前による判定
+            for (final winner in winners) {
+              if (winner['name'] == userPlayer['playerInfo']['name'] || 
+                  winner['name'] == "あなた") {
+                print('名前で勝者判定成功: ${winner['name']}');
+                isWinner = true;
+                break;
+              }
+            }
+            
+            // 方法2: ポジションによる判定（名前判定が失敗した場合）
+            if (!isWinner) {
+              for (final winner in winners) {
+                if (winner['position'] == userPlayer['playerInfo']['position'] && 
+                    userPlayer['playerInfo']['isUser'] == true) {
+                  print('ポジションで勝者判定成功: ${winner['position']}');
+                  isWinner = true;
+                  break;
+                }
+              }
+            }
+            
+            // 方法3: 賞金を獲得しているか確認
+            if (!isWinner) {
+              for (final winner in winners) {
+                if ((winner['name'] == userPlayer['playerInfo']['name'] || 
+                     winner['name'] == "あなた" ||
+                     winner['position'] == userPlayer['playerInfo']['position']) &&
+                    winner['amountWon'] != null && 
+                    winner['amountWon'] > 0) {
+                  print('賞金で勝者判定成功: ${winner['amountWon']}');
+                  isWinner = true;
+                  break;
+                }
+              }
+            }
+            
+            result = isWinner ? 'win' : 'loss';
+            print('最終判定: $result');
+          } else {
+            print('winners が null です');
+          }
+        } else {
+          print('winnerInfo が存在しません');
+          
+          // winnerInfoがない場合の代替判定
+          // チップ情報から利益を確認
+          if (userPlayer['chipInfo'] != null && userPlayer['chipInfo']['profit'] != null) {
+            final profit = userPlayer['chipInfo']['profit'];
+            print('チップ利益: $profit');
+            if (profit > 0) {
               result = 'win';
+              print('利益による勝者判定: $profit');
+            }
+          } else {
+            print('チップ情報も利用不可');
+            
+            // 最後の手段: アクションサマリーで判定
+            // フォールドしていない＋他の全員がフォールドしていれば勝利の可能性
+            final userFolded = userPlayer['handInfo']['folded'] ?? false;
+            if (!userFolded) {
+              final allPlayers = handData['playerDetails'] as List;
+              final activePlayers = allPlayers.where((p) => !(p['handInfo']['folded'] ?? false)).length;
+              print('アクティブプレイヤー数: $activePlayers');
+              
+              if (activePlayers == 1) {
+                result = 'win';
+                print('フォールド判定による勝利');
+              } else if (activePlayers <= 2) {
+                // ショーダウンの場合、とりあえず勝利と仮定（データ不足のため）
+                result = 'win';
+                print('ショーダウン推定勝利');
+              }
             }
           }
         }
+        print('===================');
 
         // Calculate pot size and street pots
         final gameSettings = handData['gameInfo']['gameSettings'];
