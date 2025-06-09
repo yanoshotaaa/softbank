@@ -1533,14 +1533,27 @@ class PokerAnalysisScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               if (provider.stats != null) _buildStatsGrid(provider.stats!),
-              const SizedBox(height: 30),
-              _buildHandsList(provider.hands, provider),
             ],
           ),
         ),
         const SizedBox(height: 20),
+        
+        // ハンドレンジ分析を最初に表示
         if (provider.rangeData.isNotEmpty) _buildHandRangeAnalysisSection(provider),
         const SizedBox(height: 20),
+        
+        // 詳細ハンド分析を2番目に表示
+        Container(
+          padding: const EdgeInsets.all(30),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: _buildHandsList(provider.hands, provider),
+        ),
+        const SizedBox(height: 20),
+        
+        // GTO分析を最後に表示
         if (provider.gtoData.isNotEmpty) _buildGTOAnalysisSection(provider),
       ],
     );
