@@ -235,6 +235,7 @@ class GTORecommendation {
   final double bestFrequency;
   final Map<String, double> allActions;
   final bool isExactMatch;
+  final double? similarityScore;
 
   GTORecommendation({
     required this.board,
@@ -245,6 +246,7 @@ class GTORecommendation {
     required this.bestFrequency,
     required this.allActions,
     required this.isExactMatch,
+    this.similarityScore,
   });
 }
 
@@ -293,9 +295,9 @@ class PokerAnalysisProvider extends ChangeNotifier {
         allowedExtensions: ['json'],
       );
 
-      if (result != null) {
-        File file = File(result.files.single.path!);
-        String content = await file.readAsString();
+      if (result != null && result.files.single.bytes != null) {
+        Uint8List fileBytes = result.files.single.bytes!;
+        String content = utf8.decode(fileBytes);      
         Map<String, dynamic> jsonData = json.decode(content);
         
         // Check for different JSON formats
@@ -574,13 +576,30 @@ class PokerAnalysisProvider extends ChangeNotifier {
     
     // Find exact match first
     GTOData? matchingBoard;
+    bool isExactMatch = true;
+    double? similarityScore;
+    
     try {
       matchingBoard = _gtoData.firstWhere(
         (gto) => _normalizeBoard(gto.tree) == boardString,
       );
     } catch (e) {
-      return null;
+      // If no exact match, try to find similar board
+      final similarBoard = _findSimilarBoard(flop);
+      if (similarBoard != null) {
+        matchingBoard = similarBoard;
+        isExactMatch = false;
+        // Calculate similarity score for the found board
+        final targetPattern = _analyzeBoardPattern(flop);
+        final dbBoard = _parseDBBoard(similarBoard.tree);
+        if (dbBoard != null) {
+          final dbPattern = _analyzeBoardPattern(dbBoard);
+          similarityScore = _calculateBoardSimilarity(targetPattern, dbPattern);
+        }
+      }
     }
+
+    if (matchingBoard == null) return null;
 
     final actions = {
       'Check': matchingBoard.check,
@@ -607,8 +626,143 @@ class PokerAnalysisProvider extends ChangeNotifier {
       bestAction: bestAction,
       bestFrequency: bestFrequency,
       allActions: actions,
-      isExactMatch: true,
+      isExactMatch: isExactMatch,
+      similarityScore: similarityScore,
     );
+  }
+
+  GTOData? _findSimilarBoard(List<String> targetFlop) {
+    if (_gtoData.isEmpty) return null;
+    
+    final targetPattern = _analyzeBoardPattern(targetFlop);
+    GTOData? bestMatch;
+    double bestScore = -1;
+    
+    for (final row in _gtoData) {
+      final dbBoard = _parseDBBoard(row.tree);
+      if (dbBoard == null || dbBoard.length < 3) continue;
+      
+      final dbPattern = _analyzeBoardPattern(dbBoard);
+      final similarity = _calculateBoardSimilarity(targetPattern, dbPattern);
+      
+      if (similarity > bestScore) {
+        bestScore = similarity;
+        bestMatch = row;
+      }
+    }
+    
+    // Return only if similarity is above 50%
+    return bestScore >= 0.5 ? bestMatch : null;
+  }
+
+  Map<String, dynamic> _analyzeBoardPattern(List<String> cards) {
+    if (cards.length < 3) return {};
+    
+    final convertedCards = cards.map(_convertCardSuit).toList();
+    final ranks = convertedCards.map((card) => card[0]).toList();
+    final suits = convertedCards.map((card) => card.substring(1)).toList();
+    
+    // Rank analysis
+    final rankCounts = <String, int>{};
+    for (final rank in ranks) {
+      rankCounts[rank] = (rankCounts[rank] ?? 0) + 1;
+    }
+    
+    final hasPair = rankCounts.values.any((count) => count >= 2);
+    final hasTrips = rankCounts.values.any((count) => count >= 3);
+    
+    // Suit analysis
+    final suitCounts = <String, int>{};
+    for (final suit in suits) {
+      suitCounts[suit] = (suitCounts[suit] ?? 0) + 1;
+    }
+    
+    final flushDraws = suitCounts.values.where((count) => count >= 2).length;
+    final rainbow = suitCounts.keys.length == 3;
+    
+    // Straight draw analysis
+    const rankOrder = 'AKQJT98765432';
+    final rankValues = ranks.map((rank) => rankOrder.indexOf(rank)).toList()..sort();
+    
+    final gaps = [
+      rankValues[1] - rankValues[0],
+      rankValues[2] - rankValues[1],
+    ];
+    
+    final straightDraw = gaps.every((gap) => gap <= 4) && (rankValues[2] - rankValues[0]) <= 4;
+    final connectedBoard = gaps.every((gap) => gap <= 2);
+    
+    // High card analysis
+    final highCardCount = ranks.where((rank) => ['A', 'K', 'Q', 'J'].contains(rank)).length;
+    final lowBoard = ranks.every((rank) => !['A', 'K', 'Q', 'J', 'T'].contains(rank));
+    
+    return {
+      'hasPair': hasPair,
+      'hasTrips': hasTrips,
+      'flushDraws': flushDraws,
+      'rainbow': rainbow,
+      'straightDraw': straightDraw,
+      'connectedBoard': connectedBoard,
+      'highCardCount': highCardCount,
+      'lowBoard': lowBoard,
+      'rankStructure': rankCounts.values.toList()..sort((a, b) => b.compareTo(a)),
+      'suitStructure': suitCounts.values.toList()..sort((a, b) => b.compareTo(a)),
+    };
+  }
+
+  double _calculateBoardSimilarity(Map<String, dynamic> pattern1, Map<String, dynamic> pattern2) {
+    if (pattern1.isEmpty || pattern2.isEmpty) return 0;
+    
+    double score = 0;
+    double totalWeight = 0;
+    
+    // Pair/trips structure comparison (high importance)
+    const weight1 = 0.25;
+    if (pattern1['hasPair'] == pattern2['hasPair']) score += weight1;
+    if (pattern1['hasTrips'] == pattern2['hasTrips']) score += weight1;
+    totalWeight += weight1 * 2;
+    
+    // Flush draw structure comparison (high importance)
+    const weight2 = 0.2;
+    if (pattern1['flushDraws'] == pattern2['flushDraws']) score += weight2;
+    if (pattern1['rainbow'] == pattern2['rainbow']) score += weight2;
+    totalWeight += weight2 * 2;
+    
+    // Straight draw structure comparison (high importance)
+    const weight3 = 0.15;
+    if (pattern1['straightDraw'] == pattern2['straightDraw']) score += weight3;
+    if (pattern1['connectedBoard'] == pattern2['connectedBoard']) score += weight3;
+    totalWeight += weight3 * 2;
+    
+    // High card structure comparison (medium importance)
+    const weight4 = 0.1;
+    final highCardDiff = (pattern1['highCardCount'] as int) - (pattern2['highCardCount'] as int);
+    if (highCardDiff.abs() <= 1) score += weight4;
+    if (pattern1['lowBoard'] == pattern2['lowBoard']) score += weight4;
+    totalWeight += weight4 * 2;
+    
+    // Rank structure comparison (medium importance)
+    const weight5 = 0.1;
+    final rank1 = pattern1['rankStructure'] as List<int>;
+    final rank2 = pattern2['rankStructure'] as List<int>;
+    if (rank1.toString() == rank2.toString()) score += weight5;
+    totalWeight += weight5;
+    
+    return totalWeight > 0 ? score / totalWeight : 0;
+  }
+
+  List<String>? _parseDBBoard(String treeString) {
+    if (treeString.length < 6) return null;
+    
+    final cards = <String>[];
+    for (int i = 0; i < 6; i += 2) {
+      if (i + 1 < treeString.length) {
+        final rank = treeString[i];
+        final suit = treeString[i + 1];
+        cards.add(rank + suit);
+      }
+    }
+    return cards;
   }
 
   String _createBoardString(List<String> cards) {
@@ -643,6 +797,152 @@ class PokerAnalysisProvider extends ChangeNotifier {
     });
 
     return cards.join('');
+  }
+
+  double? _getStreetStartPot(HandData hand, String street) {
+    print('getStreetStartPot called: $street, streetPots: ${hand.streetPots}');
+    
+    // Check new JSON format for street start pot information
+    if (hand.streetPots != null && hand.streetPots!.containsKey(street)) {
+      print('Got street start pot from JSON: $street ${hand.streetPots![street]}');
+      return hand.streetPots![street];
+    }
+    
+    // Calculate from chronological actions if available
+    final calculatedPot = _calculatePotFromChronologicalActions(hand, street);
+    if (calculatedPot != null) {
+      print('Calculated pot from chronological actions: $calculatedPot');
+      return calculatedPot;
+    }
+    
+    // Estimate from game settings
+    double basePot = 4; // Default SB + BB
+    if (street == 'preflop') {
+      print('Using base preflop pot: $basePot');
+      return basePot;
+    } else if (street == 'flop') {
+      // Add preflop bets
+      final preflopBets = _calculateStreetBets(hand, 'preflop');
+      final flopStartPot = basePot + preflopBets;
+      print('Calculated flop pot: $flopStartPot (base: $basePot + preflop bets: $preflopBets)');
+      return flopStartPot;
+    }
+    
+    print('Could not determine pot, returning null');
+    return null;
+  }
+
+  double? _calculatePotFromChronologicalActions(HandData hand, String targetStreet) {
+    // This would require chronological actions data
+    // For now, return null and rely on streetPots or calculation
+    return null;
+  }
+
+  double _calculateStreetBets(HandData hand, String street) {
+    double totalBets = 0;
+    
+    // Calculate from player actions
+    for (final action in hand.actions) {
+      if (action.street == street && 
+          ['bet', 'raise', 'call'].contains(action.action)) {
+        totalBets += action.amount;
+      }
+    }
+    
+    // Add opponent actions if available
+    if (hand.opponents != null) {
+      for (final opponent in hand.opponents!) {
+        // For simplified calculation, use total bet for preflop
+        if (street == 'preflop') {
+          totalBets += opponent.totalBet;
+        }
+      }
+    }
+    
+    return totalBets;
+  }
+
+  double _calculateFlopStartPot(HandData hand) {
+    // Calculate pot size at start of flop (after preflop is complete)
+    double potSize = 0;
+    
+    // Estimate initial pot based on pot size and player count
+    double initialPot = 15; // Default value (SB + BB + antes)
+    
+    if (hand.potSize < 100) {
+      initialPot = (hand.potSize / 3).clamp(15, 50).toDouble();
+    } else if (hand.potSize < 500) {
+      initialPot = (hand.potSize / 10).clamp(20, 100).toDouble();
+    } else {
+      initialPot = (hand.potSize / 15).clamp(30, 200).toDouble();
+    }
+    
+    potSize = initialPot;
+    
+    print('Flop start pot calculation started: initial pot: $potSize');
+    
+    // Add preflop actions
+    for (final action in hand.actions) {
+      if (action.street == 'preflop' && 
+          ['bet', 'raise', 'call'].contains(action.action)) {
+        potSize += action.amount;
+        print('Added preflop action: ${action.action} ${action.amount}, cumulative pot: $potSize');
+      }
+    }
+    
+    // Add opponent preflop actions if available
+    if (hand.opponents != null) {
+      for (final opponent in hand.opponents!) {
+        // Simplified: add total bet for preflop estimation
+        potSize += opponent.totalBet;
+        print('Added opponent preflop bet: ${opponent.totalBet}, cumulative pot: $potSize');
+      }
+    }
+    
+    print('Flop start pot calculation complete: $potSize');
+    return potSize.clamp(initialPot, double.infinity);
+  }
+
+  String _translateActionToGTO(ActionData action, HandData hand) {
+    print('translateActionToGTO called: ${action.action}, amount: ${action.amount}, handId: ${hand.handId}');
+    
+    if (action.action == 'check') return 'Check';
+    if (action.action == 'bet') {
+      if (action.amount <= 0) {
+        print('Bet amount is 0 or undefined, returning default 30%');
+        return 'Bet 30%'; // Default
+      }
+      
+      // Get street start pot size from new JSON format
+      double? streetStartPot = _getStreetStartPot(hand, 'flop');
+      print('getStreetStartPot result: $streetStartPot');
+      
+      // If not available, use traditional calculation method
+      if (streetStartPot == null) {
+        print('getStreetStartPot failed, using calculateFlopStartPot');
+        streetStartPot = _calculateFlopStartPot(hand);
+      }
+      
+      // Calculate ratio relative to street start pot
+      final betRatio = (action.amount / streetStartPot) * 100;
+      
+      // Debug information
+      print('Bet analysis (street start pot basis): '
+          'action: ${action.action}, '
+          'betAmount: ${action.amount}, '
+          'streetStartPot: $streetStartPot, '
+          'betRatio: ${betRatio.toStringAsFixed(1)}%, '
+          'decision: ${betRatio >= 75 ? 'Bet 100%' : betRatio >= 40 ? 'Bet 50%' : 'Bet 30%'}');
+      
+      if (betRatio >= 75) return 'Bet 100%';      // 75% or more → 100% pot
+      if (betRatio >= 40) return 'Bet 50%';       // 40% or more → 50% pot
+      return 'Bet 30%';                           // Less than that → 30% pot
+    }
+    if (action.action == 'call') return 'Check';
+    if (action.action == 'fold') return 'Check';
+    
+    print('Unknown action: ${action.action} -> treating as Check');
+    return 'Check';
   }
 
   String _convertCardSuit(String card) {
@@ -1345,9 +1645,9 @@ class PokerAnalysisScreen extends StatelessWidget {
           color: Colors.purple.withOpacity(0.1),
           borderRadius: BorderRadius.circular(15),
         ),
-        child: const Column(
+        child: Column(
           children: [
-            Text(
+            const Text(
               '🧠 GTO戦略分析',
               style: TextStyle(
                 fontSize: 20,
@@ -1355,13 +1655,39 @@ class PokerAnalysisScreen extends StatelessWidget {
                 color: Colors.white,
               ),
             ),
-            SizedBox(height: 10),
-            Text(
+            const SizedBox(height: 10),
+            const Text(
               'BTNポジションでフロップをプレイしたハンドがないため、GTO分析は利用できません。',
-              style: TextStyle(
-                color: Colors.white70,
-              ),
+              style: TextStyle(color: Colors.white70),
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 15),
+            Container(
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'GTO分析に必要な条件:',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    '✅ ボタンポジション（BTN）でのプレイ\n'
+                    '✅ フロップ（3枚のコミュニティカード）が配られている\n'
+                    '✅ フロップでアクション（ベット、チェック等）を行っている\n'
+                    '✅ ビッグブラインド（BB）との対戦',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -1370,6 +1696,7 @@ class PokerAnalysisScreen extends StatelessWidget {
 
     int gtoOptimalCount = 0;
     int totalAnalyzed = 0;
+    final gtoResults = <Map<String, dynamic>>[];
 
     for (final hand in applicableHands) {
       final gtoRec = provider.getGTORecommendation(hand);
@@ -1380,9 +1707,18 @@ class PokerAnalysisScreen extends StatelessWidget {
             (a) => a.street == 'flop',
           );
           final actualAction = _translateActionToGTO(flopAction, hand);
-          if (actualAction == gtoRec.bestAction) {
+          final isOptimal = actualAction == gtoRec.bestAction;
+          if (isOptimal) {
             gtoOptimalCount++;
           }
+          
+          gtoResults.add({
+            'hand': hand,
+            'gtoRec': gtoRec,
+            'flopAction': flopAction,
+            'actualAction': actualAction,
+            'isOptimal': isOptimal,
+          });
         } catch (e) {
           // No flop action found
         }
@@ -1409,6 +1745,8 @@ class PokerAnalysisScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 15),
+          
+          // Summary header
           Container(
             padding: const EdgeInsets.all(15),
             decoration: BoxDecoration(
@@ -1417,43 +1755,40 @@ class PokerAnalysisScreen extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      '分析対象ハンド:',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    Text(
-                      '$totalAnalyzed',
-                      style: const TextStyle(
-                        color: Colors.amber,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                Text(
+                  '📊 分析対象: $totalAnalyzed ハンド（全${provider.hands.length}ハンド中）',
+                  style: const TextStyle(color: Colors.white),
                 ),
                 const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'GTO最適プレイ:',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    Text(
-                      '$gtoOptimalCount (${gtoCompliance.toStringAsFixed(1)}%)',
-                      style: TextStyle(
-                        color: gtoCompliance >= 70 ? Colors.green : 
-                               gtoCompliance >= 50 ? Colors.orange : Colors.red,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                Text(
+                  '💡 ボタンポジションでのフロップ戦略をGTO理論と比較分析します',
+                  style: TextStyle(color: Colors.white.withOpacity(0.8)),
                 ),
               ],
             ),
           ),
+          
+          const SizedBox(height: 20),
+          
+          // Individual hand analysis
+          if (gtoResults.isNotEmpty) ...[
+            const Text(
+              '📋 ハンド別GTO分析',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 15),
+            ...gtoResults.map((result) => _buildGTOHandAnalysisCard(result)),
+          ],
+          
+          const SizedBox(height: 20),
+          
+          // Summary statistics
+          if (totalAnalyzed > 0) _buildGTOSummaryStats(totalAnalyzed, gtoOptimalCount, gtoCompliance),
+          
           const SizedBox(height: 15),
           _buildGTOPerformanceIndicator(gtoCompliance),
         ],
@@ -1461,31 +1796,382 @@ class PokerAnalysisScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildGTOPerformanceIndicator(double compliance) {
-    Color indicatorColor;
-    String performanceText;
-    
-    if (compliance >= 80) {
-      indicatorColor = Colors.green;
-      performanceText = '🏆 優秀: GTO理論に非常に近いプレイができています！';
-    } else if (compliance >= 60) {
-      indicatorColor = Colors.orange;
-      performanceText = '📈 良好: 概ねGTOに沿ったプレイです。さらなる向上の余地があります。';
-    } else {
-      indicatorColor = Colors.red;
-      performanceText = '⚠️ 要改善: GTO理論との乖離が大きいです。戦略の見直しをお勧めします。';
-    }
+  Widget _buildGTOHandAnalysisCard(Map<String, dynamic> result) {
+    final hand = result['hand'] as HandData;
+    final gtoRec = result['gtoRec'] as GTORecommendation;
+    final flopAction = result['flopAction'] as ActionData;
+    final actualAction = result['actualAction'] as String;
+    final isOptimal = result['isOptimal'] as bool;
 
+    return Container(
+      margin: const EdgeInsets.only(bottom: 15),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border(
+          left: BorderSide(
+            color: isOptimal ? Colors.green : Colors.red,
+            width: 4,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'ハンド #${hand.handId}',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              Row(
+                children: [
+                  Text(
+                    'EV: ${gtoRec.ev.toStringAsFixed(1)}',
+                    style: TextStyle(
+                      color: Colors.purple.shade200,
+                      fontSize: 14,
+                    ),
+                  ),
+                  if (!gtoRec.isExactMatch) ...[
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        gtoRec.similarityScore != null 
+                          ? '類似 ${(gtoRec.similarityScore! * 100).toStringAsFixed(0)}%'
+                          : '類似',
+                        style: const TextStyle(
+                          color: Colors.orange,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 10),
+          
+          // Board cards
+          Row(
+            children: [
+              const Text(
+                'ボード: ',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              ...gtoRec.board.map((card) => Container(
+                margin: const EdgeInsets.only(right: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: Text(
+                  card,
+                  style: TextStyle(
+                    color: _isRedCard(card) ? Colors.red : Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              )),
+            ],
+          ),
+          
+          const SizedBox(height: 10),
+          
+          // GTO recommendation
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.purple.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'GTO推奨: ',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    Text(
+                      '${gtoRec.bestAction} (${gtoRec.bestFrequency.toStringAsFixed(1)}%)',
+                      style: const TextStyle(
+                        color: Colors.amber,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  'エクイティ: ${gtoRec.equity.toStringAsFixed(1)}%',
+                  style: TextStyle(color: Colors.white.withOpacity(0.9)),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 10),
+          
+          // Actual action vs GTO
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: isOptimal 
+                ? Colors.green.withOpacity(0.2) 
+                : Colors.red.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      '実際のアクション: ',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    Text(
+                      actualAction,
+                      style: TextStyle(
+                        color: isOptimal ? Colors.green : Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                
+                // Bet details
+                if (flopAction.action == 'bet' && flopAction.amount > 0) ...[
+                  const SizedBox(height: 5),
+                  Builder(
+                    builder: (context) {
+                      final flopStartPot = _getStreetStartPot(hand, 'flop') ?? _calculateFlopStartPot(hand);
+                      final betRatio = ((flopAction.amount / flopStartPot) * 100);
+                      return Text(
+                        'ベット: ${flopAction.amount}, フロップ開始ポット: ${flopStartPot.toStringAsFixed(0)} → ${betRatio.toStringAsFixed(1)}% pot',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 12,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+                
+                const SizedBox(height: 5),
+                Row(
+                  children: [
+                    Text(
+                      isOptimal ? '✅ GTO最適' : '⚠️ GTO非最適',
+                      style: TextStyle(
+                        color: isOptimal ? Colors.green : Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (!gtoRec.isExactMatch) ...[
+                      const SizedBox(width: 10),
+                      Text(
+                        '※類似ボード分析',
+                        style: TextStyle(
+                          color: Colors.orange.withOpacity(0.8),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 10),
+          
+          // Action frequencies
+          const Text(
+            'アクション頻度:',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Wrap(
+            spacing: 8,
+            runSpacing: 5,
+            children: gtoRec.allActions.entries.map((entry) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Text(
+                  '${entry.key}: ${entry.value.toStringAsFixed(1)}%',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGTOSummaryStats(int totalAnalyzed, int gtoOptimalCount, double gtoCompliance) {
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: indicatorColor.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(8),
-        border: Border(left: BorderSide(color: indicatorColor, width: 4)),
+        color: Colors.purple.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(10),
       ),
-      child: Text(
-        performanceText,
-        style: const TextStyle(color: Colors.white),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '📈 GTO適合性サマリー',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 15),
+          
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildSummaryStatItem('分析対象', '$totalAnalyzed ハンド'),
+              _buildSummaryStatItem(
+                'GTO最適', 
+                '$gtoOptimalCount ハンド',
+                subtext: '${gtoCompliance.toStringAsFixed(1)}%',
+              ),
+              _buildSummaryStatItem(
+                '改善余地', 
+                '${totalAnalyzed - gtoOptimalCount} ハンド',
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Improvement suggestions
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '🎯 具体的な改善提案:',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (gtoCompliance < 60) ...[
+                  _buildImprovementPoint('フロップベッティング頻度の調整: GTOでは状況に応じてベット/チェックを使い分けます'),
+                  _buildImprovementPoint('ベットサイズの最適化: ポットサイズに対する適切なベット額（30%、50%、100%）を学習しましょう'),
+                  _buildImprovementPoint('ボードテクスチャの理解: ドロー系ボードとペア系ボードで戦略を変えましょう'),
+                ] else if (gtoCompliance < 80) ...[
+                  _buildImprovementPoint('バランス調整: 強いハンドと弱いハンドの混合頻度を最適化しましょう'),
+                  _buildImprovementPoint('ポジション活用: BTNの有利性を最大限活かした積極的なプレイを心がけましょう'),
+                ] else ...[
+                  _buildImprovementPoint('継続性: 現在の高いGTO適合性を維持してください'),
+                  _buildImprovementPoint('応用: 他のポジションでも同様の理論的アプローチを適用しましょう'),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryStatItem(String label, String value, {String? subtext}) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.amber,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        if (subtext != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            subtext,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.green,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+        const SizedBox(height: 5),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.white.withOpacity(0.8),
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImprovementPoint(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '• ',
+            style: TextStyle(color: Colors.blue),
+          ),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1624,6 +2310,10 @@ class PokerAnalysisScreen extends StatelessWidget {
     return 'Check';
   }
 
+  double? _getStreetStartPot(HandData hand, String street) {
+    return hand.streetPots?[street];
+  }
+
   double _calculateFlopStartPot(HandData hand) {
     // Simple calculation - in reality this would be more complex
     double initialPot = 15; // SB + BB estimate
@@ -1637,6 +2327,40 @@ class PokerAnalysisScreen extends StatelessWidget {
     }
     
     return initialPot;
+  }
+
+  Widget _buildGTOPerformanceIndicator(double compliance) {
+    Color indicatorColor;
+    String performanceText;
+    
+    if (compliance >= 80) {
+      indicatorColor = Colors.green;
+      performanceText = '🏆 優秀: GTO理論に非常に近いプレイができています！';
+    } else if (compliance >= 60) {
+      indicatorColor = Colors.orange;
+      performanceText = '📈 良好: 概ねGTOに沿ったプレイです。さらなる向上の余地があります。';
+    } else {
+      indicatorColor = Colors.red;
+      performanceText = '⚠️ 要改善: GTO理論との乖離が大きいです。戦略の見直しをお勧めします。';
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: indicatorColor.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(8),
+        border: Border(left: BorderSide(color: indicatorColor, width: 4)),
+      ),
+      child: Text(
+        performanceText,
+        style: const TextStyle(color: Colors.white),
+      ),
+    );
+  }
+
+  bool _isRedCard(String card) {
+    return card.contains('♥') || card.contains('♦') || 
+           card.contains('h') || card.contains('d');
   }
 
   String _translatePosition(String position) {
