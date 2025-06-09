@@ -138,6 +138,7 @@ class OpponentData {
   final List<String> cards;
   final double totalBet;
   final bool folded;
+  final List<ActionData>? actions; // アクション情報を追加
 
   OpponentData({
     required this.name,
@@ -145,6 +146,7 @@ class OpponentData {
     required this.cards,
     required this.totalBet,
     required this.folded,
+    this.actions,
   });
 
   factory OpponentData.fromJson(Map<String, dynamic> json) {
@@ -154,6 +156,9 @@ class OpponentData {
       cards: List<String>.from(json['cards'] ?? []),
       totalBet: (json['total_bet'] ?? 0).toDouble(),
       folded: json['folded'] ?? false,
+      actions: (json['actions'] as List?)
+          ?.map((a) => ActionData.fromJson(a))
+          .toList(),
     );
   }
 }
@@ -381,6 +386,25 @@ class PokerAnalysisProvider extends ChangeNotifier {
         final opponents = <OpponentData>[];
         for (final player in handData['playerDetails']) {
           if (player['playerInfo']['isUser'] != true && player['playerInfo']['name'] != "あなた") {
+            // 相手のアクション情報も変換
+            final opponentActions = <ActionData>[];
+            if (player['detailedActions'] != null) {
+              for (final action in player['detailedActions']) {
+                final streetMap = {
+                  'プリフロップ': 'preflop',
+                  'フロップ': 'flop', 
+                  'ターン': 'turn',
+                  'リバー': 'river'
+                };
+                
+                opponentActions.add(ActionData(
+                  street: streetMap[action['stage']] ?? action['stage'].toLowerCase(),
+                  action: action['action'],
+                  amount: (action['amount'] ?? 0).toDouble(),
+                ));
+              }
+            }
+            
             opponents.add(OpponentData(
               name: player['playerInfo']['name'],
               position: _convertPosition(player['playerInfo']['position']),
@@ -389,6 +413,7 @@ class PokerAnalysisProvider extends ChangeNotifier {
                   : [],
               totalBet: (player['actionSummary']['totalAmountBet'] ?? 0).toDouble(),
               folded: player['handInfo']['folded'] ?? false,
+              actions: opponentActions,
             ));
           }
         }
@@ -623,6 +648,12 @@ class PokerAnalysisProvider extends ChangeNotifier {
             cards: ['5♣', 'A♠'],
             totalBet: 6,
             folded: false,
+            actions: [
+              ActionData(street: 'preflop', action: 'call', amount: 6),
+              ActionData(street: 'flop', action: 'check', amount: 0),
+              ActionData(street: 'turn', action: 'check', amount: 0),
+              ActionData(street: 'river', action: 'check', amount: 0),
+            ],
           ),
           OpponentData(
             name: 'CPU1',
@@ -630,6 +661,19 @@ class PokerAnalysisProvider extends ChangeNotifier {
             cards: ['9♣', 'T♣'],
             totalBet: 0,
             folded: true,
+            actions: [
+              ActionData(street: 'preflop', action: 'fold', amount: 0),
+            ],
+          ),
+          OpponentData(
+            name: 'CPU3',
+            position: 'under_the_gun',
+            cards: [], // プリフロップフォールド
+            totalBet: 0,
+            folded: true,
+            actions: [
+              ActionData(street: 'preflop', action: 'fold', amount: 0),
+            ],
           ),
         ],
         result: 'win', // 修正: デモデータは勝利に変更
@@ -649,6 +693,19 @@ class PokerAnalysisProvider extends ChangeNotifier {
         actions: [
           ActionData(street: 'preflop', action: 'raise', amount: 100),
           ActionData(street: 'flop', action: 'bet', amount: 150),
+        ],
+        opponents: [
+          OpponentData(
+            name: 'CPU1',
+            position: 'big_blind',
+            cards: ['K♣', 'J♠'],
+            totalBet: 200,
+            folded: true,
+            actions: [
+              ActionData(street: 'preflop', action: 'call', amount: 100),
+              ActionData(street: 'flop', action: 'fold', amount: 0),
+            ],
+          ),
         ],
         result: 'win',
         potSize: 800,
@@ -1644,6 +1701,12 @@ class PokerAnalysisScreen extends StatelessWidget {
           if (gtoRecommendation != null) ...[
             const SizedBox(height: 15),
             _buildGTORecommendationCard(hand, gtoRecommendation),
+          ],
+          
+          // 相手プレイヤーのハンド表示を追加
+          if (hand.opponents != null && hand.opponents!.isNotEmpty) ...[
+            const SizedBox(height: 15),
+            _buildOpponentsSection(hand),
           ],
         ],
       ),
@@ -2764,6 +2827,295 @@ class PokerAnalysisScreen extends StatelessWidget {
     }
     
     return hands;
+  }
+
+  Widget _buildOpponentsSection(HandData hand) {
+    // プリフロップでフォールドしたプレイヤーを除外
+    final activeOpponents = hand.opponents!.where((opponent) {
+      // カード情報がない場合は除外（プリフロップフォールド）
+      if (opponent.cards.isEmpty) return false;
+      
+      // アクション情報がある場合は、それを使って判定
+      if (opponent.actions != null && opponent.actions!.isNotEmpty) {
+        // プリフロップでフォールドしているかチェック
+        final preflopActions = opponent.actions!.where((a) => a.street == 'preflop').toList();
+        if (preflopActions.isNotEmpty) {
+          final lastPreflopAction = preflopActions.last;
+          if (lastPreflopAction.action == 'fold') {
+            print('${opponent.name}: プリフロップでフォールド');
+            return false; // プリフロップフォールドは除外
+          }
+        }
+        
+        // フロップ以降のアクションがあるかチェック
+        final postFlopActions = opponent.actions!.where((a) => a.street != 'preflop').toList();
+        if (postFlopActions.isNotEmpty) {
+          print('${opponent.name}: フロップ以降にアクションあり');
+          return true; // フロップ以降に参加
+        }
+      }
+      
+      // アクション情報がない場合は、従来の方法で判定
+      // フォールドしているが、カード情報があり、かつベット額が少ない場合
+      if (opponent.folded && opponent.totalBet <= 3) {
+        print('${opponent.name}: ベット額が少ないプリフロップフォールド (${opponent.totalBet})');
+        return false;
+      }
+      
+      print('${opponent.name}: 表示対象');
+      return true;
+    }).toList();
+
+    // デバッグ情報
+    print('=== 相手プレイヤー表示デバッグ ===');
+    print('全相手プレイヤー数: ${hand.opponents?.length ?? 0}');
+    for (int i = 0; i < (hand.opponents?.length ?? 0); i++) {
+      final opp = hand.opponents![i];
+      final hasActions = opp.actions != null && opp.actions!.isNotEmpty;
+      final actionSummary = hasActions 
+        ? opp.actions!.map((a) => '${a.street}:${a.action}').join(', ')
+        : '情報なし';
+      print('相手$i: ${opp.name}, folded: ${opp.folded}, cards: ${opp.cards.length}枚, totalBet: ${opp.totalBet}, アクション: $actionSummary');
+    }
+    print('表示対象プレイヤー数: ${activeOpponents.length}');
+    print('========================');
+
+    if (activeOpponents.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: Colors.grey.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(10),
+          border: const Border(left: BorderSide(color: Colors.grey, width: 4)),
+        ),
+        child: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '👥 相手プレイヤー',
+              style: TextStyle(
+                color: Colors.grey,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            SizedBox(height: 10),
+            Text(
+              'フロップ以降に参加した相手プレイヤーがいませんでした',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.blue.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(10),
+        border: const Border(left: BorderSide(color: Colors.blue, width: 4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.people,
+                color: Colors.blue,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '👥 フロップ参加プレイヤー (${activeOpponents.length}人)',
+                style: const TextStyle(
+                  color: Colors.blue,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 15),
+          
+          // プレイヤーごとの情報を表示
+          ...activeOpponents.map((opponent) => _buildOpponentCard(opponent)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOpponentCard(OpponentData opponent) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: opponent.folded 
+          ? Colors.red.withOpacity(0.1) 
+          : Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: opponent.folded 
+          ? Border.all(color: Colors.red.withOpacity(0.5), width: 1)
+          : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // プレイヤー名とポジション
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: opponent.folded 
+                        ? Colors.red.withOpacity(0.3)
+                        : Colors.blue.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      opponent.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _translatePosition(opponent.position),
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 12,
+                    ),
+                  ),
+                  if (opponent.folded) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        'FOLD',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              if (opponent.totalBet > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    'ベット: ${opponent.totalBet.toInt()}',
+                    style: const TextStyle(
+                      color: Colors.orange,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          
+          const SizedBox(height: 10),
+          
+          // ハンドカード
+          if (opponent.cards.isNotEmpty) ...[
+            const Text(
+              'ハンド:',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 5),
+            Wrap(
+              spacing: 6,
+              children: [
+                ...opponent.cards.map((card) => Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: opponent.folded 
+                      ? Colors.grey.withOpacity(0.5)
+                      : Colors.white,
+                    borderRadius: BorderRadius.circular(6),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 2,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    card,
+                    style: TextStyle(
+                      color: opponent.folded 
+                        ? Colors.white70
+                        : (_isRedCard(card) ? Colors.red : Colors.black),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                )),
+                const SizedBox(width: 10),
+                
+                // ハンドの強さ評価
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    _evaluateHandStrength(opponent.cards),
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text(
+                'ハンド非公開',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 
   String _translatePositionToShort(String position) {
