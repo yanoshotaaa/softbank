@@ -345,37 +345,6 @@ class _HomeContentState extends State<HomeContent>
                               widget.onTabSelected?.call(3);
                             },
                           ),
-                          _buildQuickActionCard(
-                            icon: Icons.phone_android,
-                            title: '携帯プラン診断',
-                            subtitle: 'あなたに最適なプランを診断',
-                            color: _primaryColor,
-                            onTap: () {
-                              HapticFeedback.mediumImpact();
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => PlanDiagnosisScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          _buildQuickActionCard(
-                            icon: Icons.calendar_today,
-                            title: '店舗予約',
-                            subtitle: '店舗を予約する',
-                            color: _primaryColor,
-                            onTap: () {
-                              HapticFeedback.mediumImpact();
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      StoreReservationScreen(),
-                                ),
-                              );
-                            },
-                          ),
                         ],
                       ),
                     ],
