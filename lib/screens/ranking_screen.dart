@@ -11,6 +11,18 @@ class RankingScreen extends StatefulWidget {
 
 class _RankingScreenState extends State<RankingScreen>
     with TickerProviderStateMixin {
+  // カラーパレットの定義
+  static const _primaryColor = Color(0xFF6B46C1); // メインカラー
+  static const _secondaryColor = Color(0xFF9F7AEA); // アクセントカラー
+  static const _backgroundColor = Color(0xFFF7FAFC); // 背景色
+  static const _textPrimaryColor = Color(0xFF2D3748); // 主要テキスト色
+  static const _textSecondaryColor = Color(0xFF718096); // 補助テキスト色
+  static const _successColor = Color(0xFF48BB78); // 成功色
+  static const _warningColor = Color(0xFFED8936); // 警告色
+  static const _errorColor = Color(0xFFE53E3E); // エラー色
+  static const _cardGradientStart = Color(0xFFF3E8FF); // カードグラデーション開始色
+  static const _cardGradientEnd = Color(0xFFE9D8FD); // カードグラデーション終了色
+
   AnimationController? _pulseController;
   Animation<double>? _pulseAnimation;
   List<AnimationController>? _rankAnimations;
@@ -89,10 +101,10 @@ class _RankingScreenState extends State<RankingScreen>
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: _backgroundColor,
       body: Stack(
         children: [
-          // 豪華なグラデーション背景
+          // 背景グラデーション
           Container(
             width: double.infinity,
             height: double.infinity,
@@ -101,9 +113,9 @@ class _RankingScreenState extends State<RankingScreen>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFFB993D6).withOpacity(0.95),
-                  const Color(0xFF8CA6DB).withOpacity(0.95),
-                  const Color(0xFFF3E6FF).withOpacity(0.95),
+                  _primaryColor.withOpacity(0.95),
+                  _secondaryColor.withOpacity(0.95),
+                  _backgroundColor.withOpacity(0.95),
                 ],
                 stops: const [0.0, 0.5, 1.0],
               ),
@@ -125,7 +137,7 @@ class _RankingScreenState extends State<RankingScreen>
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          Colors.purple.withOpacity(0.1),
+                          _primaryColor.withOpacity(0.1),
                           Colors.transparent,
                         ],
                       ),
@@ -286,7 +298,7 @@ class _RankCard extends StatelessWidget {
       case 3:
         return const Color(0xFFCD7F32); // 銅
       default:
-        return Colors.purple;
+        return _RankingScreenState._primaryColor;
     }
   }
 
@@ -302,28 +314,28 @@ class _RankCard extends StatelessWidget {
         },
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.95),
+            gradient: const LinearGradient(
+              colors: [
+                _RankingScreenState._cardGradientStart,
+                _RankingScreenState._cardGradientEnd
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: rankColor.withOpacity(0.1),
-                blurRadius: 15,
+                color: _RankingScreenState._primaryColor.withOpacity(0.08),
+                blurRadius: 16,
                 offset: const Offset(0, 6),
-                spreadRadius: 1,
-              ),
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
               ),
             ],
             border: Border.all(
-              color: isTopThree
-                  ? rankColor.withOpacity(0.3)
-                  : Colors.white.withOpacity(0.7),
-              width: isTopThree ? 2 : 1.5,
+              color: Colors.white.withOpacity(0.8),
+              width: 1.5,
             ),
           ),
           child: Row(
@@ -332,38 +344,23 @@ class _RankCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
+                  color: rankColor.withOpacity(0.1),
                   shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [
-                      rankColor.withOpacity(0.8),
-                      rankColor.withOpacity(0.6),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                  border: Border.all(
+                    color: rankColor.withOpacity(0.3),
+                    width: 2,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: rankColor.withOpacity(0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
                 ),
                 child: Center(
-                  child: isTopThree
-                      ? Icon(
-                          Icons.emoji_events,
-                          color: Colors.white,
-                          size: 24,
-                        )
-                      : Text(
-                          rank.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
+                  child: Text(
+                    '$rank',
+                    style: TextStyle(
+                      color: rankColor,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Noto Sans JP',
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
@@ -373,69 +370,80 @@ class _RankCard extends StatelessWidget {
                   children: [
                     Text(
                       name,
-                      style: TextStyle(
+                      style: const TextStyle(
+                        color: _RankingScreenState._textPrimaryColor,
                         fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                        letterSpacing: 0.3,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Noto Sans JP',
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _getTrendColor(trend).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                _getTrendIcon(trend),
-                                color: _getTrendColor(trend),
-                                size: 12,
-                              ),
-                              const SizedBox(width: 2),
-                              Text(
-                                trend,
-                                style: TextStyle(
-                                  color: _getTrendColor(trend),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    Text(
+                      '$score pt',
+                      style: TextStyle(
+                        color: _RankingScreenState._textSecondaryColor,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Noto Sans JP',
+                      ),
                     ),
                   ],
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
+                  horizontal: 8,
+                  vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: rankColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
+                  color: trend.startsWith('+')
+                      ? _RankingScreenState._successColor.withOpacity(0.1)
+                      : trend.startsWith('-')
+                          ? _RankingScreenState._errorColor.withOpacity(0.1)
+                          : _RankingScreenState._textSecondaryColor
+                              .withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: rankColor.withOpacity(0.3),
+                    color: trend.startsWith('+')
+                        ? _RankingScreenState._successColor.withOpacity(0.2)
+                        : trend.startsWith('-')
+                            ? _RankingScreenState._errorColor.withOpacity(0.2)
+                            : _RankingScreenState._textSecondaryColor
+                                .withOpacity(0.2),
+                    width: 1,
                   ),
                 ),
-                child: Text(
-                  '$score pt',
-                  style: TextStyle(
-                    color: rankColor.withOpacity(0.8),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      trend.startsWith('+')
+                          ? Icons.arrow_upward
+                          : trend.startsWith('-')
+                              ? Icons.arrow_downward
+                              : Icons.remove,
+                      color: trend.startsWith('+')
+                          ? _RankingScreenState._successColor
+                          : trend.startsWith('-')
+                              ? _RankingScreenState._errorColor
+                              : _RankingScreenState._textSecondaryColor,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      trend,
+                      style: TextStyle(
+                        color: trend.startsWith('+')
+                            ? _RankingScreenState._successColor
+                            : trend.startsWith('-')
+                                ? _RankingScreenState._errorColor
+                                : _RankingScreenState._textSecondaryColor,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Noto Sans JP',
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -443,17 +451,5 @@ class _RankCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Color _getTrendColor(String trend) {
-    if (trend.startsWith('+')) return Colors.green;
-    if (trend == '0') return Colors.grey;
-    return Colors.red;
-  }
-
-  IconData _getTrendIcon(String trend) {
-    if (trend.startsWith('+')) return Icons.arrow_upward;
-    if (trend == '0') return Icons.remove;
-    return Icons.arrow_downward;
   }
 }

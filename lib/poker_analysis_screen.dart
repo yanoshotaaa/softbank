@@ -1,10 +1,81 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'main.dart'; // Providerやモデルのため
 import 'widgets/common_header.dart';
 
-class PokerAnalysisScreen extends StatelessWidget {
+class PokerAnalysisScreen extends StatefulWidget {
   const PokerAnalysisScreen({Key? key}) : super(key: key);
+
+  @override
+  State<PokerAnalysisScreen> createState() => _PokerAnalysisScreenState();
+}
+
+class _PokerAnalysisScreenState extends State<PokerAnalysisScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+  late ScrollController _scrollController;
+  bool _showScrollToTop = false;
+
+  // カラーパレットの定義
+  static const _primaryColor = Color(0xFF6B46C1); // メインカラー
+  static const _secondaryColor = Color(0xFF9F7AEA); // アクセントカラー
+  static const _backgroundColor = Color(0xFFF7FAFC); // 背景色
+  static const _textPrimaryColor = Color(0xFF2D3748); // 主要テキスト色
+  static const _textSecondaryColor = Color(0xFF718096); // 補助テキスト色
+  static const _successColor = Color(0xFF48BB78); // 成功色
+  static const _warningColor = Color(0xFFED8936); // 警告色
+  static const _errorColor = Color(0xFFE53E3E); // エラー色
+  static const _cardGradientStart = Color(0xFFF3E8FF); // カードグラデーション開始色
+  static const _cardGradientEnd = Color(0xFFE9D8FD); // カードグラデーション終了色
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeAnimations();
+    _initializeScrollController();
+  }
+
+  void _initializeAnimations() {
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeOut,
+      ),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeOut,
+      ),
+    );
+
+    _animationController.forward();
+  }
+
+  void _initializeScrollController() {
+    _scrollController = ScrollController();
+    _scrollController.addListener(() {
+      setState(() {
+        _showScrollToTop = _scrollController.offset > 200;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,23 +87,50 @@ class PokerAnalysisScreen extends StatelessWidget {
     const double headerHeight = 56;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: _backgroundColor,
       body: Stack(
         children: [
           // 落ち着いたグラデーション背景
           Container(
             width: double.infinity,
             height: double.infinity,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFFA18CD1),
-                  Color(0xFFC6B6E5),
-                  Color(0xFFF3E6FF)
+                  _primaryColor.withOpacity(0.95),
+                  _secondaryColor.withOpacity(0.95),
+                  _backgroundColor.withOpacity(0.95),
                 ],
+                stops: const [0.0, 0.5, 1.0],
               ),
+            ),
+          ),
+          // 装飾的な背景要素
+          Positioned(
+            top: -100,
+            right: -100,
+            child: AnimatedBuilder(
+              animation: _animationController,
+              builder: (context, child) {
+                return Transform.rotate(
+                  angle: _animationController.value * 0.1,
+                  child: Container(
+                    width: 300,
+                    height: 300,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          Colors.purple.withOpacity(0.1),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           // ステータスバー部分を白で塗りつぶす
@@ -53,267 +151,303 @@ class PokerAnalysisScreen extends StatelessWidget {
             top: statusBarHeight + headerHeight,
             child: SafeArea(
               top: false,
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // ゴージャスなタイトルカード
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 32, horizontal: 18),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFF3E6FF), Color(0xFFEDE7F6)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(28),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.purple.withOpacity(0.10),
-                              blurRadius: 24,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                          border: Border.all(
-                              color: Colors.white.withOpacity(0.8), width: 2.5),
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
-                                Icon(Icons.emoji_events,
-                                    color: Color(0xFFFFD700), size: 32),
-                                SizedBox(width: 10),
-                                Text(
-                                  'テキサスホールデム\nハンド分析AI',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                    letterSpacing: 1.2,
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.white,
-                                        blurRadius: 8,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'プレイデータを分析して、戦略的なフィードバックを提供します',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 15,
-                                color: Color(0xFFB0B0B0),
-                                fontWeight: FontWeight.w400,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.white,
-                                    blurRadius: 6,
-                                  ),
-                                ],
+              child: AnimatedBuilder(
+                animation: _fadeAnimation,
+                builder: (context, child) {
+                  return FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: Transform.scale(
+                      scale: _scaleAnimation.value,
+                      child: SingleChildScrollView(
+                        controller: _scrollController,
+                        physics: const BouncingScrollPhysics(),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // ゴージャスなタイトルカード
+                              _buildTitleCard(),
+                              const SizedBox(height: 28),
+                              // ゴージャスなアップロードカード
+                              _buildUploadCard(context),
+                              const SizedBox(height: 24),
+                              // ゴージャスなJSONフォーマット説明カード
+                              _buildJsonFormatCard(),
+                              const SizedBox(height: 28),
+                              // 分析結果やローディング
+                              Consumer<PokerAnalysisProvider>(
+                                builder: (context, provider, child) {
+                                  if (provider.isLoading) {
+                                    return _buildLoadingSection();
+                                  } else if (provider.hands.isNotEmpty) {
+                                    return _buildAnalysisSection(provider);
+                                  }
+                                  return const SizedBox.shrink();
+                                },
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-                      // ゴージャスなアップロードカード
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 28, horizontal: 18),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFF3E6FF), Color(0xFFEDE7F6)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                            ],
                           ),
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.purple.withOpacity(0.08),
-                              blurRadius: 18,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                          border: Border.all(
-                              color: Colors.white.withOpacity(0.7), width: 2.2),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
-                                Icon(Icons.folder_open,
-                                    color: Colors.purple, size: 26),
-                                SizedBox(width: 8),
-                                Text(
-                                  'ハンドデータをアップロード',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 22),
-                            SizedBox(
-                              width: double.infinity,
-                              height: 54,
-                              child: _buildActionButton(
-                                'データ読み込み',
-                                const Color(0xFFF3F4F6),
-                                () => context
-                                    .read<PokerAnalysisProvider>()
-                                    .loadJsonFile(),
-                                textColor: Colors.black,
-                                icon: null,
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                            SizedBox(
-                              width: double.infinity,
-                              height: 54,
-                              child: _buildActionButton(
-                                '🎮 自動データ読み込み',
-                                const Color(0xFFE6F4EA),
-                                () => context
-                                    .read<PokerAnalysisProvider>()
-                                    .loadDemoData(),
-                                textColor: Colors.black,
-                                icon: null,
-                              ),
-                            ),
-                          ],
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      // ゴージャスなJSONフォーマット説明カード
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [Color(0xFFEDE7F6), Color(0xFFC6B6E5)],
-                          ),
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(
-                              color: Colors.white.withOpacity(0.7), width: 2.2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.purple.withOpacity(0.08),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: DefaultTextStyle(
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontFamily: 'monospace',
-                              fontSize: 13),
-                          child: _buildJsonFormatInfo(),
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-                      // 分析結果やローディング
-                      Consumer<PokerAnalysisProvider>(
-                        builder: (context, provider, child) {
-                          if (provider.isLoading) {
-                            return _buildLoadingSection();
-                          } else if (provider.hands.isNotEmpty) {
-                            return _buildAnalysisSection(provider);
-                          }
-                          return const SizedBox.shrink();
-                        },
-                      ),
-                    ],
-                  ),
-                ),
+                    ),
+                  );
+                },
               ),
             ),
           ),
+          // スクロールトップボタン
+          if (_showScrollToTop)
+            Positioned(
+              right: 20,
+              bottom: 20,
+              child: FloatingActionButton(
+                onPressed: () {
+                  HapticFeedback.mediumImpact();
+                  _scrollController.animateTo(
+                    0,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut,
+                  );
+                },
+                backgroundColor: _primaryColor.withOpacity(0.9),
+                child: const Icon(Icons.arrow_upward, color: Colors.white),
+              ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildTitleCard() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [_cardGradientStart, _cardGradientEnd],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: _primaryColor.withOpacity(0.10),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+        border: Border.all(color: Colors.white.withOpacity(0.8), width: 2.5),
+      ),
+      child: Column(
         children: [
           const Text(
-            'ポーカー分析',
+            'テキサスホールデム\nハンド分析AI',
+            textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.purple,
               fontSize: 24,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w700,
+              color: _textPrimaryColor,
+              letterSpacing: 1.2,
+              height: 1.3,
+              fontFamily: 'Noto Sans JP',
+              shadows: [
+                Shadow(
+                  color: Colors.white,
+                  blurRadius: 8,
+                ),
+              ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.purple),
-            onPressed: () {
-              // 設定画面への遷移
-            },
+          const SizedBox(height: 12),
+          const Text(
+            'プレイデータを分析して、戦略的なフィードバックを提供します',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 15,
+              color: _textSecondaryColor,
+              fontWeight: FontWeight.w400,
+              height: 1.5,
+              fontFamily: 'Noto Sans JP',
+              shadows: [
+                Shadow(
+                  color: Colors.white,
+                  blurRadius: 6,
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildActionButton(String text, Color color, VoidCallback onPressed,
-      {Color textColor = Colors.black, IconData? icon}) {
+  Widget _buildUploadCard(BuildContext context) {
     return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 18),
       decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withOpacity(0.7), width: 1.5),
-      ),
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          foregroundColor: textColor,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          elevation: 0,
+        gradient: const LinearGradient(
+          colors: [_cardGradientStart, _cardGradientEnd],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, color: textColor),
-              const SizedBox(width: 8),
-            ],
-            Text(
-              text,
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                color: textColor,
-                letterSpacing: 1.1,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: _primaryColor.withOpacity(0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+        border: Border.all(color: Colors.white.withOpacity(0.7), width: 2.2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedBuilder(
+                animation: _animationController,
+                builder: (context, child) {
+                  return Transform.rotate(
+                    angle: _animationController.value * 0.1,
+                    child:
+                        Icon(Icons.folder_open, color: _primaryColor, size: 26),
+                  );
+                },
               ),
+              const SizedBox(width: 8),
+              const Text(
+                'ハンドデータをアップロード',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: _textPrimaryColor,
+                  fontFamily: 'Noto Sans JP',
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 22),
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: _buildActionButton(
+              'データ読み込み',
+              const Color(0xFFF3F4F6),
+              () {
+                HapticFeedback.mediumImpact();
+                context.read<PokerAnalysisProvider>().loadJsonFile();
+              },
+              textColor: _textPrimaryColor,
+              icon: null,
             ),
-          ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: _buildActionButton(
+              '🎮 自動データ読み込み',
+              const Color(0xFFE6F4EA),
+              () {
+                HapticFeedback.mediumImpact();
+                context.read<PokerAnalysisProvider>().loadDemoData();
+              },
+              textColor: _textPrimaryColor,
+              icon: null,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildJsonFormatCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [_cardGradientStart, _cardGradientEnd],
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withOpacity(0.7), width: 2.2),
+        boxShadow: [
+          BoxShadow(
+            color: _primaryColor.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: DefaultTextStyle(
+        style: const TextStyle(
+          color: _textPrimaryColor,
+          fontFamily: 'Fira Code',
+          fontSize: 13,
+          height: 1.5,
+          letterSpacing: 0.5,
+        ),
+        child: _buildJsonFormatInfo(),
+      ),
+    );
+  }
+
+  Widget _buildActionButton(
+    String text,
+    Color backgroundColor,
+    VoidCallback onPressed, {
+    Color? textColor,
+    IconData? icon,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _primaryColor.withOpacity(0.1),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: _primaryColor.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, color: textColor ?? _primaryColor, size: 20),
+                  const SizedBox(width: 8),
+                ],
+                Text(
+                  text,
+                  style: TextStyle(
+                    color: textColor ?? _primaryColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Noto Sans JP',
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -381,16 +515,37 @@ class PokerAnalysisScreen extends StatelessWidget {
 
   Widget _buildLoadingSection() {
     return Container(
-      padding: const EdgeInsets.all(40),
-      child: const Column(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [_cardGradientStart, _cardGradientEnd],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: _primaryColor.withOpacity(0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+        border: Border.all(color: Colors.white.withOpacity(0.7), width: 2.2),
+      ),
+      child: Column(
         children: [
-          CircularProgressIndicator(color: Colors.amber),
-          SizedBox(height: 20),
+          const CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(_primaryColor),
+          ),
+          const SizedBox(height: 16),
           Text(
             '分析中...',
             style: TextStyle(
-              fontSize: 18,
-              color: Colors.white,
+              color: _textPrimaryColor,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'Noto Sans JP',
             ),
           ),
         ],

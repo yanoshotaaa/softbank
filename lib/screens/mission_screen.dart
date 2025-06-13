@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../widgets/common_header.dart';
 
 class Mission {
   final String id;
@@ -29,7 +31,73 @@ class MissionScreen extends StatefulWidget {
   State<MissionScreen> createState() => _MissionScreenState();
 }
 
-class _MissionScreenState extends State<MissionScreen> {
+class _MissionScreenState extends State<MissionScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animationController;
+  late final Animation<double> _fadeAnimation;
+  late final Animation<double> _scaleAnimation;
+  final ScrollController _scrollController = ScrollController();
+  bool _showScrollToTop = false;
+
+  // カラーパレットの定義
+  static const _primaryColor = Color(0xFF6B46C1); // メインカラー
+  static const _secondaryColor = Color(0xFF9F7AEA); // アクセントカラー
+  static const _backgroundColor = Color(0xFFF7FAFC); // 背景色
+  static const _textPrimaryColor = Color(0xFF2D3748); // 主要テキスト色
+  static const _textSecondaryColor = Color(0xFF718096); // 補助テキスト色
+  static const _successColor = Color(0xFF48BB78); // 成功色
+  static const _warningColor = Color(0xFFED8936); // 警告色
+  static const _errorColor = Color(0xFFE53E3E); // エラー色
+  static const _cardGradientStart = Color(0xFFF3E8FF); // カードグラデーション開始色
+  static const _cardGradientEnd = Color(0xFFE9D8FD); // カードグラデーション終了色
+
+  @override
+  void initState() {
+    super.initState();
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeOut,
+      ),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeOut,
+      ),
+    );
+
+    _scrollController.addListener(_onScroll);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _animationController.forward();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.offset > 200 && !_showScrollToTop) {
+      setState(() => _showScrollToTop = true);
+    } else if (_scrollController.offset <= 200 && _showScrollToTop) {
+      setState(() => _showScrollToTop = false);
+    }
+  }
+
   List<Mission> _getMissions() {
     return [
       Mission(
@@ -87,224 +155,480 @@ class _MissionScreenState extends State<MissionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final double statusBarHeight = MediaQuery.of(context).padding.top;
     final missions = _getMissions();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F8FF),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text('ミッション', style: TextStyle(color: Colors.black)),
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.black),
-      ),
-      body: Column(
+      backgroundColor: _backgroundColor,
+      body: Stack(
         children: [
+          // 背景グラデーション
           Container(
-            padding: const EdgeInsets.all(16),
+            width: double.infinity,
+            height: double.infinity,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFB388FF), Color(0xFF7C4DFF)],
+              gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
+                colors: [
+                  _primaryColor.withOpacity(0.95),
+                  _secondaryColor.withOpacity(0.95),
+                  _backgroundColor.withOpacity(0.95),
+                ],
+                stops: const [0.0, 0.5, 1.0],
               ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(24),
-                bottomRight: Radius.circular(24),
-              ),
-            ),
-            child: Column(
-              children: [
-                const Text(
-                  '現在のミッションポイント',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  '0',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                LinearProgressIndicator(
-                  value: 0.3,
-                  backgroundColor: Colors.white.withOpacity(0.3),
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  '次のレベルまで: 700pt',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
             ),
           ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: missions.length,
-              itemBuilder: (context, index) {
-                final mission = missions[index];
-                return _buildMissionCard(mission);
+          // 装飾的な背景要素
+          Positioned(
+            top: -100,
+            right: -100,
+            child: AnimatedBuilder(
+              animation: _animationController,
+              builder: (context, child) {
+                return Transform.rotate(
+                  angle: _animationController.value * 0.1,
+                  child: Container(
+                    width: 300,
+                    height: 300,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          _primaryColor.withOpacity(0.1),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                );
               },
             ),
           ),
+          // ステータスバー部分を白で塗りつぶす
+          Container(
+            width: double.infinity,
+            height: statusBarHeight,
+            color: Colors.white,
+          ),
+          // 共通ヘッダー
+          Positioned(
+            top: statusBarHeight,
+            left: 0,
+            right: 0,
+            child: const CommonHeader(),
+          ),
+          // メインコンテンツ
+          Positioned(
+            top: statusBarHeight + 56, // ヘッダーの高さを考慮
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: ScaleTransition(
+                scale: _scaleAnimation,
+                child: Column(
+                  children: [
+                    // ポイント表示カード
+                    Container(
+                      margin: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [_cardGradientStart, _cardGradientEnd],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: _primaryColor.withOpacity(0.1),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.8),
+                          width: 2,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    '現在のポイント',
+                                    style: TextStyle(
+                                      color: _textPrimaryColor,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'Noto Sans JP',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    '1,200',
+                                    style: TextStyle(
+                                      color: _textPrimaryColor,
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.w700,
+                                      fontFamily: 'Noto Sans JP',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _primaryColor.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: _primaryColor.withOpacity(0.2),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.emoji_events,
+                                      color: _primaryColor,
+                                      size: 20,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Lv.5',
+                                      style: TextStyle(
+                                        color: _primaryColor,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        fontFamily: 'Noto Sans JP',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: LinearProgressIndicator(
+                              value: 0.7,
+                              backgroundColor: _primaryColor.withOpacity(0.1),
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                  _primaryColor),
+                              minHeight: 8,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '次のレベルまで',
+                                style: TextStyle(
+                                  color: _textSecondaryColor,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'Noto Sans JP',
+                                ),
+                              ),
+                              Text(
+                                '800pt',
+                                style: TextStyle(
+                                  color: _textSecondaryColor,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'Noto Sans JP',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    // ミッションリスト
+                    Expanded(
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                        itemCount: missions.length,
+                        itemBuilder: (context, index) {
+                          return _buildMissionCard(missions[index], index);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // スクロールトップボタン
+          if (_showScrollToTop)
+            Positioned(
+              right: 20,
+              bottom: 20,
+              child: FloatingActionButton(
+                onPressed: () {
+                  HapticFeedback.mediumImpact();
+                  _scrollController.animateTo(
+                    0,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut,
+                  );
+                },
+                backgroundColor: _primaryColor.withOpacity(0.9),
+                child: const Icon(Icons.arrow_upward, color: Colors.white),
+              ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildMissionCard(Mission mission) {
+  Widget _buildMissionCard(Mission mission, int index) {
     final progress = mission.progress / mission.target;
     final isInProgress = mission.progress > 0 && !mission.isCompleted;
+    final categoryColor = _getCategoryColor(mission.category);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: _getCategoryColor(mission.category).withOpacity(0.1),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  _getCategoryIcon(mission.category),
-                  color: _getCategoryColor(mission.category),
-                  size: 24,
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(0, 20 * (1 - _animationController.value)),
+          child: Opacity(
+            opacity: _animationController.value,
+            child: Container(
+              margin: EdgeInsets.only(bottom: 16, top: index == 0 ? 8 : 0),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [_cardGradientStart, _cardGradientEnd],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: _primaryColor.withOpacity(0.08),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.8),
+                  width: 1.5,
+                ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    // ミッション詳細を表示
+                  },
+                  borderRadius: BorderRadius.circular(20),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        mission.title,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: categoryColor.withOpacity(0.1),
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(20),
+                            topRight: Radius.circular(20),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: categoryColor.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                _getCategoryIcon(mission.category),
+                                color: categoryColor,
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    mission.title,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                      color: _textPrimaryColor,
+                                      fontFamily: 'Noto Sans JP',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    mission.description,
+                                    style: TextStyle(
+                                      color: _textSecondaryColor,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      fontFamily: 'Noto Sans JP',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: categoryColor.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: categoryColor.withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                '${mission.reward}pt',
+                                style: TextStyle(
+                                  color: categoryColor,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                  fontFamily: 'Noto Sans JP',
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        mission.description,
-                        style: TextStyle(
-                          color: Colors.black.withOpacity(0.6),
-                          fontSize: 14,
+                      Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '進捗: ${mission.progress}/${mission.target}',
+                                  style: TextStyle(
+                                    color: _textSecondaryColor,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    fontFamily: 'Noto Sans JP',
+                                  ),
+                                ),
+                                if (mission.isCompleted)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _successColor.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: _successColor.withOpacity(0.2),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.check_circle,
+                                          color: _successColor,
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '達成',
+                                          style: TextStyle(
+                                            color: _successColor,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            fontFamily: 'Noto Sans JP',
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Stack(
+                              children: [
+                                Container(
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: _primaryColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ),
+                                Container(
+                                  height: 8,
+                                  width: MediaQuery.of(context).size.width *
+                                      0.8 *
+                                      progress,
+                                  decoration: BoxDecoration(
+                                    color: isInProgress
+                                        ? _warningColor
+                                        : mission.isCompleted
+                                            ? _successColor
+                                            : _primaryColor,
+                                    borderRadius: BorderRadius.circular(4),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: (isInProgress
+                                                ? _warningColor
+                                                : mission.isCompleted
+                                                    ? _successColor
+                                                    : _primaryColor)
+                                            .withOpacity(0.3),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _getCategoryColor(mission.category),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '${mission.reward}pt',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '進捗: ${mission.progress}/${mission.target}',
-                      style: TextStyle(
-                        color: Colors.black.withOpacity(0.6),
-                        fontSize: 14,
-                      ),
-                    ),
-                    if (mission.isCompleted)
-                      const Icon(
-                        Icons.check_circle,
-                        color: Colors.green,
-                        size: 20,
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Stack(
-                  children: [
-                    Container(
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                    ),
-                    Container(
-                      height: 6,
-                      width: MediaQuery.of(context).size.width * 0.8 * progress,
-                      decoration: BoxDecoration(
-                        color: isInProgress
-                            ? Colors.orange
-                            : mission.isCompleted
-                                ? Colors.green
-                                : Colors.grey,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Color _getCategoryColor(String category) {
     switch (category) {
       case 'beginner':
-        return Colors.green;
+        return const Color(0xFF48BB78); // 緑
       case 'intermediate':
-        return Colors.orange;
+        return const Color(0xFFED8936); // オレンジ
       case 'advanced':
-        return Colors.red;
+        return const Color(0xFFE53E3E); // 赤
       default:
-        return Colors.blue;
+        return _primaryColor;
     }
   }
 

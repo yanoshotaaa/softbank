@@ -16,6 +16,18 @@ class _HomeContentState extends State<HomeContent>
   final ScrollController _scrollController = ScrollController();
   bool _showScrollToTop = false;
 
+  // カラーパレットの定義
+  static const _primaryColor = Color(0xFF6B46C1); // メインカラー
+  static const _secondaryColor = Color(0xFF9F7AEA); // アクセントカラー
+  static const _backgroundColor = Color(0xFFF7FAFC); // 背景色
+  static const _textPrimaryColor = Color(0xFF2D3748); // 主要テキスト色
+  static const _textSecondaryColor = Color(0xFF718096); // 補助テキスト色
+  static const _successColor = Color(0xFF48BB78); // 成功色
+  static const _warningColor = Color(0xFFED8936); // 警告色
+  static const _errorColor = Color(0xFFE53E3E); // エラー色
+  static const _cardGradientStart = Color(0xFFF3E8FF); // カードグラデーション開始色
+  static const _cardGradientEnd = Color(0xFFE9D8FD); // カードグラデーション終了色
+
   @override
   void initState() {
     super.initState();
@@ -57,9 +69,11 @@ class _HomeContentState extends State<HomeContent>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                const Color(0xFFA18CD1).withOpacity(0.95),
-                const Color(0xFFFBC2EB).withOpacity(0.95),
+                _primaryColor.withOpacity(0.95),
+                _secondaryColor.withOpacity(0.95),
+                _backgroundColor.withOpacity(0.95),
               ],
+              stops: const [0.0, 0.5, 1.0],
             ),
           ),
         ),
@@ -79,7 +93,7 @@ class _HomeContentState extends State<HomeContent>
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        Colors.purple.withOpacity(0.1),
+                        _primaryColor.withOpacity(0.1),
                         Colors.transparent,
                       ],
                     ),
@@ -100,348 +114,312 @@ class _HomeContentState extends State<HomeContent>
             child: const CommonHeader(),
           ),
         ),
-        // スクロール可能な本体部分
-        Positioned.fill(
-          top: statusBarHeight + 64,
-          child: Stack(
-            children: [
-              SingleChildScrollView(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ユーザー情報セクション
-                    Container(
-                      margin: const EdgeInsets.fromLTRB(18, 20, 18, 0),
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.95),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
+        // メインコンテンツ
+        Positioned(
+          top: statusBarHeight + 56,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ユーザー情報カード
+                Container(
+                  margin: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [_cardGradientStart, _cardGradientEnd],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _primaryColor.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
                       ),
-                      child: Column(
+                    ],
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.8),
+                      width: 2,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              // アバター
-                              AnimatedBuilder(
-                                animation: _animation,
-                                builder: (context, child) {
-                                  return Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.purple.withOpacity(
-                                              0.3 * _animation.value),
-                                          blurRadius: 24 * _animation.value,
-                                          spreadRadius: 2,
-                                        ),
-                                      ],
-                                    ),
-                                    child: const CircleAvatar(
-                                      radius: 36,
-                                      backgroundColor: Color(0xFFE1BEE7),
-                                      child: Icon(Icons.person,
-                                          size: 44, color: Colors.purple),
-                                    ),
-                                  );
-                                },
+                          Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [
+                                  _primaryColor.withOpacity(0.8),
+                                  _secondaryColor.withOpacity(0.8),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
                               ),
-                              const SizedBox(width: 20),
-                              // ユーザー情報
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: _primaryColor.withOpacity(0.2),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.8),
+                                width: 2,
+                              ),
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.person,
+                                color: Colors.white,
+                                size: 32,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'SHOOTER',
+                                  style: TextStyle(
+                                    color: _textPrimaryColor,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w700,
+                                    fontFamily: 'Noto Sans JP',
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Row(
-                                      children: [
-                                        const Text(
-                                          'SHOOTER',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 24,
-                                            color: Colors.purple,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 10, vertical: 6),
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                Colors.purple.withOpacity(0.8),
-                                                Colors.purple.withOpacity(0.6),
-                                              ],
-                                            ),
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.purple
-                                                    .withOpacity(0.2),
-                                                blurRadius: 8,
-                                                offset: const Offset(0, 2),
-                                              ),
-                                            ],
-                                          ),
-                                          child: const Text(
-                                            'VIP',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 12),
-                                    // 進捗バー
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(6),
-                                      child: LinearProgressIndicator(
-                                        value: 0.7,
-                                        backgroundColor:
-                                            Colors.purple.withOpacity(0.1),
-                                        valueColor:
-                                            const AlwaysStoppedAnimation<Color>(
-                                                Colors.purple),
-                                        minHeight: 8,
+                                    Text(
+                                      '次のレベルまで 300ポイント',
+                                      style: TextStyle(
+                                        color: _textSecondaryColor,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        fontFamily: 'Noto Sans JP',
                                       ),
                                     ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          '次のレベルまで 300ポイント',
-                                          style: TextStyle(
-                                            color:
-                                                Colors.purple.withOpacity(0.8),
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: _primaryColor.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: _primaryColor.withOpacity(0.2),
+                                          width: 1,
                                         ),
-                                        Text(
-                                          'Lv.7',
-                                          style: TextStyle(
-                                            color:
-                                                Colors.purple.withOpacity(0.8),
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                      ),
+                                      child: Text(
+                                        'Lv.7',
+                                        style: TextStyle(
+                                          color: _primaryColor,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          fontFamily: 'Noto Sans JP',
                                         ),
-                                      ],
+                                      ),
                                     ),
                                   ],
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          // 統計情報
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              _buildStatItem(
-                                icon: Icons.analytics,
-                                value: '128',
-                                label: '分析回数',
-                              ),
-                              _buildStatItem(
-                                icon: Icons.emoji_events,
-                                value: '85%',
-                                label: '勝率',
-                              ),
-                              _buildStatItem(
-                                icon: Icons.trending_up,
-                                value: '2,500',
-                                label: 'ポイント',
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                    // クイックアクションセクション
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 24, 18, 0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      const SizedBox(height: 20),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: LinearProgressIndicator(
+                          value: 0.65,
+                          backgroundColor: _primaryColor.withOpacity(0.1),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                              _primaryColor),
+                          minHeight: 8,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      // 統計情報
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'クイックアクション',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.purple,
-                                ),
-                              ),
-                              TextButton.icon(
-                                onPressed: () {
-                                  HapticFeedback.lightImpact();
-                                  // すべてのアクションを表示
-                                },
-                                icon: const Icon(
-                                  Icons.grid_view,
-                                  size: 18,
-                                  color: Colors.purple,
-                                ),
-                                label: Text(
-                                  'すべて',
-                                  style: TextStyle(
-                                    color: Colors.purple.withOpacity(0.8),
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            ],
+                          _buildStatItem(
+                            icon: Icons.analytics,
+                            value: '128',
+                            label: '分析回数',
+                            color: _primaryColor,
                           ),
-                          const SizedBox(height: 16),
-                          Wrap(
-                            spacing: 12,
-                            runSpacing: 12,
-                            children: [
-                              _buildQuickActionCard(
-                                icon: Icons.analytics,
-                                title: '分析開始',
-                                subtitle: '最新のハンドを分析',
-                                color: Colors.purple,
-                                onTap: () {
-                                  HapticFeedback.mediumImpact();
-                                  // 分析画面へ遷移
-                                },
-                              ),
-                              _buildQuickActionCard(
-                                icon: Icons.history,
-                                title: '履歴',
-                                subtitle: '過去の分析結果',
-                                color: Colors.blue,
-                                onTap: () {
-                                  HapticFeedback.mediumImpact();
-                                  // 履歴画面へ遷移
-                                },
-                              ),
-                              _buildQuickActionCard(
-                                icon: Icons.emoji_events,
-                                title: 'ランキング',
-                                subtitle: '週間ランキング',
-                                color: Colors.amber,
-                                onTap: () {
-                                  HapticFeedback.mediumImpact();
-                                  // ランキング画面へ遷移
-                                },
-                              ),
-                              _buildQuickActionCard(
-                                icon: Icons.flag,
-                                title: 'ミッション',
-                                subtitle: '達成状況を確認',
-                                color: Colors.green,
-                                onTap: () {
-                                  HapticFeedback.mediumImpact();
-                                  // ミッション画面へ遷移
-                                },
-                              ),
-                            ],
+                          _buildStatItem(
+                            icon: Icons.emoji_events,
+                            value: '85%',
+                            label: '勝率',
+                            color: _successColor,
+                          ),
+                          _buildStatItem(
+                            icon: Icons.trending_up,
+                            value: '2,500',
+                            label: 'ポイント',
+                            color: _warningColor,
                           ),
                         ],
                       ),
-                    ),
-                    // 最近の分析セクション
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 24, 18, 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                '最近の分析',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.purple,
-                                ),
-                              ),
-                              TextButton.icon(
-                                onPressed: () {
-                                  HapticFeedback.lightImpact();
-                                  // すべての分析結果へ遷移
-                                },
-                                icon: const Icon(
-                                  Icons.history,
-                                  size: 18,
-                                  color: Colors.purple,
-                                ),
-                                label: Text(
-                                  'すべて見る',
-                                  style: TextStyle(
-                                    color: Colors.purple.withOpacity(0.8),
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          _buildRecentAnalysisCard(
-                            hand: 'A♠ K♠',
-                            result: '勝利',
-                            date: '2024/03/20',
-                            compliance: 0.85,
-                            potSize: '12,500',
-                            position: 'BTN',
-                          ),
-                          const SizedBox(height: 12),
-                          _buildRecentAnalysisCard(
-                            hand: 'Q♥ Q♦',
-                            result: '敗北',
-                            date: '2024/03/19',
-                            compliance: 0.65,
-                            potSize: '8,200',
-                            position: 'CO',
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // スクロールトップボタン
-              if (_showScrollToTop)
-                Positioned(
-                  right: 20,
-                  bottom: 20,
-                  child: FloatingActionButton(
-                    onPressed: () {
-                      HapticFeedback.mediumImpact();
-                      _scrollController.animateTo(
-                        0,
-                        duration: const Duration(milliseconds: 500),
-                        curve: Curves.easeInOut,
-                      );
-                    },
-                    backgroundColor: Colors.purple.withOpacity(0.9),
-                    child: const Icon(Icons.arrow_upward, color: Colors.white),
+                    ],
                   ),
                 ),
-            ],
+                // クイックアクションセクション
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 8, 18, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'クイックアクション',
+                        style: TextStyle(
+                          color: _textPrimaryColor,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'Noto Sans JP',
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          _buildQuickActionCard(
+                            icon: Icons.analytics,
+                            title: '分析開始',
+                            subtitle: '最新のハンドを分析',
+                            color: _primaryColor,
+                            onTap: () {
+                              HapticFeedback.mediumImpact();
+                              // 分析画面へ遷移
+                            },
+                          ),
+                          _buildQuickActionCard(
+                            icon: Icons.history,
+                            title: '履歴',
+                            subtitle: '過去の分析結果',
+                            color: _primaryColor,
+                            onTap: () {
+                              HapticFeedback.mediumImpact();
+                              // 履歴画面へ遷移
+                            },
+                          ),
+                          _buildQuickActionCard(
+                            icon: Icons.emoji_events,
+                            title: 'ランキング',
+                            subtitle: '週間ランキング',
+                            color: _primaryColor,
+                            onTap: () {
+                              HapticFeedback.mediumImpact();
+                              // ランキング画面へ遷移
+                            },
+                          ),
+                          _buildQuickActionCard(
+                            icon: Icons.flag,
+                            title: 'ミッション',
+                            subtitle: '達成状況を確認',
+                            color: _primaryColor,
+                            onTap: () {
+                              HapticFeedback.mediumImpact();
+                              // ミッション画面へ遷移
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                // 最近の分析セクション
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 24, 18, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            '最近の分析',
+                            style: TextStyle(
+                              color: _textPrimaryColor,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'Noto Sans JP',
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              HapticFeedback.lightImpact();
+                              // 履歴画面へ遷移
+                            },
+                            child: Text(
+                              'すべて見る',
+                              style: TextStyle(
+                                color: _primaryColor,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Noto Sans JP',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildRecentAnalysisCard(
+                        title: 'AKs vs QQ',
+                        date: '2024/03/15',
+                        result: '勝利',
+                        isWin: true,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildRecentAnalysisCard(
+                        title: 'JJ vs AKo',
+                        date: '2024/03/14',
+                        result: '敗北',
+                        isWin: false,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
+        // スクロールトップボタン
+        if (_showScrollToTop)
+          Positioned(
+            right: 20,
+            bottom: 20,
+            child: FloatingActionButton(
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                _scrollController.animateTo(
+                  0,
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeInOut,
+                );
+              },
+              backgroundColor: Colors.purple.withOpacity(0.9),
+              child: const Icon(Icons.arrow_upward, color: Colors.white),
+            ),
+          ),
       ],
     );
   }
@@ -450,31 +428,39 @@ class _HomeContentState extends State<HomeContent>
     required IconData icon,
     required String value,
     required String label,
+    required Color color,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.purple.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
+        ),
       ),
       child: Column(
         children: [
-          Icon(icon, color: Colors.purple, size: 24),
+          Icon(icon, color: color, size: 24),
           const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(
-              color: Colors.purple,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
+            style: TextStyle(
+              color: _textPrimaryColor,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Noto Sans JP',
             ),
           ),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
-              color: Colors.purple.withOpacity(0.7),
+              color: _textSecondaryColor,
               fontSize: 12,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Noto Sans JP',
             ),
           ),
         ],
@@ -489,218 +475,179 @@ class _HomeContentState extends State<HomeContent>
     required Color color,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: (MediaQuery.of(context).size.width - 48) / 2,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.95),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: (MediaQuery.of(context).size.width - 48) / 2,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.95),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.8),
+              width: 1.5,
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: _primaryColor.withOpacity(0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
-              child: Icon(icon, color: color, size: 28),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.black87,
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _primaryColor.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Icon(
+                  icon,
+                  color: _primaryColor,
+                  size: 24,
+                ),
               ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              subtitle,
-              style: TextStyle(
-                color: Colors.black54,
-                fontSize: 13,
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: _textPrimaryColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Noto Sans JP',
+                  letterSpacing: 0.5,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  color: _textSecondaryColor.withOpacity(0.9),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'Noto Sans JP',
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildRecentAnalysisCard({
-    required String hand,
-    required String result,
+    required String title,
     required String date,
-    required double compliance,
-    required String potSize,
-    required String position,
+    required String result,
+    required bool isWin,
   }) {
-    final isWin = result == '勝利';
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
+        gradient: const LinearGradient(
+          colors: [_cardGradientStart, _cardGradientEnd],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: _primaryColor.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
+        border: Border.all(
+          color: Colors.white.withOpacity(0.8),
+          width: 1.5,
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: (isWin ? Colors.green : Colors.red).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  hand,
-                  style: TextStyle(
-                    color: isWin ? Colors.green : Colors.red,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                ),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isWin
+                  ? _successColor.withOpacity(0.1)
+                  : _errorColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isWin
+                    ? _successColor.withOpacity(0.2)
+                    : _errorColor.withOpacity(0.2),
+                width: 1,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: (isWin ? Colors.green : Colors.red)
-                                .withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            result,
-                            style: TextStyle(
-                              color: isWin ? Colors.green : Colors.red,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          date,
-                          style: TextStyle(
-                            color: Colors.black54,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            position,
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.amber.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            '${potSize}円',
-                            style: TextStyle(
-                              color: Colors.amber[800],
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: LinearProgressIndicator(
-              value: compliance,
-              backgroundColor: Colors.purple.withOpacity(0.1),
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.purple),
-              minHeight: 6,
+            ),
+            child: Icon(
+              isWin ? Icons.emoji_events : Icons.trending_down,
+              color: isWin ? _successColor : _errorColor,
+              size: 24,
             ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'GTO準拠度 ${(compliance * 100).toInt()}%',
-                style: TextStyle(
-                  color: Colors.purple.withOpacity(0.8),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  HapticFeedback.lightImpact();
-                  // 詳細を表示
-                },
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: Text(
-                  '詳細を見る',
-                  style: TextStyle(
-                    color: Colors.purple.withOpacity(0.8),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: _textPrimaryColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Noto Sans JP',
                   ),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  date,
+                  style: TextStyle(
+                    color: _textSecondaryColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'Noto Sans JP',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 6,
+            ),
+            decoration: BoxDecoration(
+              color: isWin
+                  ? _successColor.withOpacity(0.1)
+                  : _errorColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isWin
+                    ? _successColor.withOpacity(0.2)
+                    : _errorColor.withOpacity(0.2),
+                width: 1,
               ),
-            ],
+            ),
+            child: Text(
+              result,
+              style: TextStyle(
+                color: isWin ? _successColor : _errorColor,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Noto Sans JP',
+              ),
+            ),
           ),
         ],
       ),
