@@ -6,40 +6,60 @@ import 'screens/ranking_screen.dart';
 import 'screens/mission_screen.dart';
 import 'screens/account_screen.dart';
 import 'screens/home_content.dart';
+import 'screens/history_screen.dart';
 import 'widgets/common_header.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  HomeScreenState createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
+class HomeScreenState extends State<HomeScreen> {
+  int selectedIndex = 0;
 
-  // ナビゲーションタブの画面リスト
-  final List<Widget> _screens = [
-    const HomeContent(),
-    const PokerAnalysisScreen(),
-    const RankingScreen(),
-    const MissionScreen(),
-    const AccountScreen(),
-  ];
+  void _showHistoryScreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const HistoryScreen(),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_selectedIndex],
+      body: IndexedStack(
+        index: selectedIndex,
+        children: [
+          HomeContent(
+            onTabSelected: (index) {
+              if (index == 1) {
+                _showHistoryScreen();
+              } else {
+                setState(() {
+                  selectedIndex = index;
+                });
+              }
+            },
+          ),
+          const PokerAnalysisScreen(),
+          const RankingScreen(),
+          const MissionScreen(),
+          const AccountScreen(),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
+        currentIndex: selectedIndex,
         onTap: (index) {
           setState(() {
-            _selectedIndex = index;
+            selectedIndex = index;
           });
         },
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.purple,
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color(0xFF6B46C1),
         unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(

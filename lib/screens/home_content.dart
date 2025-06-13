@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import '../widgets/common_header.dart';
 
 class HomeContent extends StatefulWidget {
-  const HomeContent({Key? key}) : super(key: key);
+  final Function(int)? onTabSelected;
+
+  const HomeContent({Key? key, this.onTabSelected}) : super(key: key);
 
   @override
   State<HomeContent> createState() => _HomeContentState();
@@ -308,7 +310,7 @@ class _HomeContentState extends State<HomeContent>
                             color: _primaryColor,
                             onTap: () {
                               HapticFeedback.mediumImpact();
-                              // 分析画面へ遷移
+                              widget.onTabSelected?.call(1);
                             },
                           ),
                           _buildQuickActionCard(
@@ -318,7 +320,7 @@ class _HomeContentState extends State<HomeContent>
                             color: _primaryColor,
                             onTap: () {
                               HapticFeedback.mediumImpact();
-                              // 履歴画面へ遷移
+                              widget.onTabSelected?.call(1);
                             },
                           ),
                           _buildQuickActionCard(
@@ -328,7 +330,7 @@ class _HomeContentState extends State<HomeContent>
                             color: _primaryColor,
                             onTap: () {
                               HapticFeedback.mediumImpact();
-                              // ランキング画面へ遷移
+                              widget.onTabSelected?.call(2);
                             },
                           ),
                           _buildQuickActionCard(
@@ -338,7 +340,7 @@ class _HomeContentState extends State<HomeContent>
                             color: _primaryColor,
                             onTap: () {
                               HapticFeedback.mediumImpact();
-                              // ミッション画面へ遷移
+                              widget.onTabSelected?.call(3);
                             },
                           ),
                         ],

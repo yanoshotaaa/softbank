@@ -242,7 +242,7 @@ class _PokerAnalysisScreenState extends State<PokerAnalysisScreen>
       child: Column(
         children: [
           const Text(
-            'テキサスホールデム\nハンド分析AI',
+            'SBテキサスホールデム\nハンド分析AI',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 24,

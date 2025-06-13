@@ -39,10 +39,12 @@ import 'package:provider/provider.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'home_screen.dart';
+import 'models/analysis_history.dart';
+import 'providers/poker_analysis_provider.dart';
 
 // Main App
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -50,17 +52,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => PokerAnalysisProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => PokerAnalysisProvider()),
+        ChangeNotifierProvider(create: (_) => AnalysisHistoryProvider()),
+      ],
       child: MaterialApp(
-        title: 'テキサスホールデム ハンド分析AI',
+        title: 'SoftBank',
         theme: ThemeData(
-          primarySwatch: Colors.green,
-          scaffoldBackgroundColor: const Color(0xFF0f4c3a),
-          appBarTheme: const AppBarTheme(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-          ),
+          primarySwatch: Colors.purple,
+          fontFamily: 'Noto Sans JP',
+          scaffoldBackgroundColor: const Color(0xFFF7FAFC),
         ),
         home: const HomeScreen(),
       ),
