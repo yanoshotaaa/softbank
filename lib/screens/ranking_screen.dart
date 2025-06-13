@@ -1,19 +1,91 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../widgets/common_header.dart';
 
-class RankingScreen extends StatelessWidget {
+class RankingScreen extends StatefulWidget {
   const RankingScreen({Key? key}) : super(key: key);
 
   @override
+  State<RankingScreen> createState() => _RankingScreenState();
+}
+
+class _RankingScreenState extends State<RankingScreen>
+    with TickerProviderStateMixin {
+  AnimationController? _pulseController;
+  Animation<double>? _pulseAnimation;
+  List<AnimationController>? _rankAnimations;
+  List<Animation<double>>? _rankFadeAnimations;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeAnimations();
+  }
+
+  void _initializeAnimations() {
+    // パルスアニメーションの初期化
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(begin: 0.7, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _pulseController!,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    // ランキングアニメーションの初期化
+    _rankAnimations = List.generate(
+      10,
+      (index) => AnimationController(
+        vsync: this,
+        duration: Duration(milliseconds: 500 + (index * 100)),
+      ),
+    );
+
+    _rankFadeAnimations = _rankAnimations!.map((controller) {
+      return Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(
+          parent: controller,
+          curve: Curves.easeOut,
+        ),
+      );
+    }).toList();
+
+    // アニメーションを順次開始
+    for (var controller in _rankAnimations!) {
+      controller.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulseController?.dispose();
+    _rankAnimations?.forEach((controller) => controller.dispose());
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_pulseAnimation == null || _rankFadeAnimations == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     final double statusBarHeight = MediaQuery.of(context).padding.top;
     const double headerHeight = 56;
     final List<Map<String, dynamic>> rankingData = [
-      {'rank': 1, 'name': 'SHOOTER', 'score': 3200},
-      {'rank': 2, 'name': 'POKERKING', 'score': 2800},
-      {'rank': 3, 'name': 'AI_BOT', 'score': 2500},
-      {'rank': 4, 'name': 'YUKI', 'score': 2100},
-      {'rank': 5, 'name': 'TAKASHI', 'score': 1800},
+      {'rank': 1, 'name': 'SHOOTER', 'score': 3200, 'trend': '+2'},
+      {'rank': 2, 'name': 'POKERKING', 'score': 2800, 'trend': '-1'},
+      {'rank': 3, 'name': 'AI_BOT', 'score': 2500, 'trend': '+3'},
+      {'rank': 4, 'name': 'YUKI', 'score': 2100, 'trend': '0'},
+      {'rank': 5, 'name': 'TAKASHI', 'score': 1800, 'trend': '-2'},
+      {'rank': 6, 'name': 'POKERMASTER', 'score': 1700, 'trend': '+1'},
+      {'rank': 7, 'name': 'CARDWIZARD', 'score': 1650, 'trend': '-1'},
+      {'rank': 8, 'name': 'ALLIN', 'score': 1600, 'trend': '+2'},
+      {'rank': 9, 'name': 'BLUFFKING', 'score': 1550, 'trend': '0'},
+      {'rank': 10, 'name': 'FOLDMASTER', 'score': 1500, 'trend': '-1'},
     ];
 
     return Scaffold(
@@ -24,16 +96,43 @@ class RankingScreen extends StatelessWidget {
           Container(
             width: double.infinity,
             height: double.infinity,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFFB993D6),
-                  Color(0xFF8CA6DB),
-                  Color(0xFFF3E6FF)
+                  const Color(0xFFB993D6).withOpacity(0.95),
+                  const Color(0xFF8CA6DB).withOpacity(0.95),
+                  const Color(0xFFF3E6FF).withOpacity(0.95),
                 ],
+                stops: const [0.0, 0.5, 1.0],
               ),
+            ),
+          ),
+          // 装飾的な背景要素
+          Positioned(
+            top: -100,
+            right: -100,
+            child: AnimatedBuilder(
+              animation: _pulseAnimation!,
+              builder: (context, child) {
+                return Transform.rotate(
+                  angle: _pulseAnimation!.value * 0.1,
+                  child: Container(
+                    width: 300,
+                    height: 300,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          Colors.purple.withOpacity(0.1),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           // ステータスバー部分を白で塗りつぶす
@@ -61,11 +160,22 @@ class RankingScreen extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
                     child: Row(
-                      children: const [
-                        Icon(Icons.emoji_events,
-                            color: Color(0xFFFFD700), size: 32),
-                        SizedBox(width: 10),
-                        Text(
+                      children: [
+                        AnimatedBuilder(
+                          animation: _pulseAnimation!,
+                          builder: (context, child) {
+                            return Transform.scale(
+                              scale: 1.0 + (_pulseAnimation!.value * 0.1),
+                              child: const Icon(
+                                Icons.emoji_events,
+                                color: Color(0xFFFFD700),
+                                size: 32,
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
                           '週間ランキング',
                           style: TextStyle(
                             fontSize: 24,
@@ -74,52 +184,71 @@ class RankingScreen extends StatelessWidget {
                             letterSpacing: 1.2,
                           ),
                         ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.purple.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.purple.withOpacity(0.3),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.update,
+                                size: 16,
+                                color: Colors.purple.withOpacity(0.8),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '更新まで 2:30',
+                                style: TextStyle(
+                                  color: Colors.purple.withOpacity(0.8),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   // ランキングリスト
                   Expanded(
                     child: ListView.separated(
+                      physics: const BouncingScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                       itemCount: rankingData.length,
                       separatorBuilder: (context, i) =>
-                          const SizedBox(height: 18),
+                          const SizedBox(height: 12),
                       itemBuilder: (context, i) {
-                        if (i == 0) {
-                          return _TopRankCard(
-                            rank: rankingData[0]['rank'],
-                            name: rankingData[0]['name'],
-                            score: rankingData[0]['score'],
-                            color: const Color(0xFFFFD700),
-                            crown: Icons.emoji_events,
-                            size: 100,
-                          );
-                        } else if (i == 1) {
-                          return _TopRankCard(
-                            rank: rankingData[1]['rank'],
-                            name: rankingData[1]['name'],
-                            score: rankingData[1]['score'],
-                            color: const Color(0xFFC0C0C0),
-                            crown: Icons.emoji_events,
-                            size: 90,
-                          );
-                        } else if (i == 2) {
-                          return _TopRankCard(
-                            rank: rankingData[2]['rank'],
-                            name: rankingData[2]['name'],
-                            score: rankingData[2]['score'],
-                            color: const Color(0xFFCD7F32),
-                            crown: Icons.emoji_events,
-                            size: 90,
-                          );
-                        } else {
-                          final item = rankingData[i];
-                          return _OtherRankCard(
-                            rank: item['rank'],
-                            name: item['name'],
-                            score: item['score'],
-                          );
-                        }
+                        final item = rankingData[i];
+                        return AnimatedBuilder(
+                          animation: _rankFadeAnimations![i],
+                          builder: (context, child) {
+                            return Transform.translate(
+                              offset: Offset(
+                                  0, 50 * (1 - _rankFadeAnimations![i].value)),
+                              child: Opacity(
+                                opacity: _rankFadeAnimations![i].value,
+                                child: _RankCard(
+                                  rank: item['rank'],
+                                  name: item['name'],
+                                  score: item['score'],
+                                  trend: item['trend'],
+                                  isTopThree: i < 3,
+                                ),
+                              ),
+                            );
+                          },
+                        );
                       },
                     ),
                   ),
@@ -133,166 +262,198 @@ class RankingScreen extends StatelessWidget {
   }
 }
 
-class _TopRankCard extends StatelessWidget {
+class _RankCard extends StatelessWidget {
   final int rank;
   final String name;
   final int score;
-  final Color color;
-  final IconData crown;
-  final double size;
+  final String trend;
+  final bool isTopThree;
 
-  const _TopRankCard({
+  const _RankCard({
     required this.rank,
     required this.name,
     required this.score,
-    required this.color,
-    required this.crown,
-    required this.size,
+    required this.trend,
+    required this.isTopThree,
   });
+
+  Color _getRankColor() {
+    switch (rank) {
+      case 1:
+        return const Color(0xFFFFD700); // 金
+      case 2:
+        return const Color(0xFFC0C0C0); // 銀
+      case 3:
+        return const Color(0xFFCD7F32); // 銅
+      default:
+        return Colors.purple;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Stack(
-          alignment: Alignment.topCenter,
-          children: [
-            Container(
-              width: size,
-              height: size,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [color.withOpacity(0.8), color.withOpacity(0.5)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withOpacity(0.3),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
+    final rankColor = _getRankColor();
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          // ユーザープロフィールへ遷移
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.95),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: rankColor.withOpacity(0.1),
+                blurRadius: 15,
+                offset: const Offset(0, 6),
+                spreadRadius: 1,
               ),
-              child: Center(
-                child: Icon(
-                  crown,
-                  color: color,
-                  size: size / 2.2,
-                ),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
+            ],
+            border: Border.all(
+              color: isTopThree
+                  ? rankColor.withOpacity(0.3)
+                  : Colors.white.withOpacity(0.7),
+              width: isTopThree ? 2 : 1.5,
             ),
-            Positioned(
-              top: 0,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(12),
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      rankColor.withOpacity(0.8),
+                      rankColor.withOpacity(0.6),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: color.withOpacity(0.2),
-                      blurRadius: 6,
+                      color: rankColor.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
+                child: Center(
+                  child: isTopThree
+                      ? Icon(
+                          Icons.emoji_events,
+                          color: Colors.white,
+                          size: 24,
+                        )
+                      : Text(
+                          rank.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _getTrendColor(trend).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _getTrendIcon(trend),
+                                color: _getTrendColor(trend),
+                                size: 12,
+                              ),
+                              const SizedBox(width: 2),
+                              Text(
+                                trend,
+                                style: TextStyle(
+                                  color: _getTrendColor(trend),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: rankColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: rankColor.withOpacity(0.3),
+                  ),
+                ),
                 child: Text(
-                  '$rank 位',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  '$score pt',
+                  style: TextStyle(
+                    color: rankColor.withOpacity(0.8),
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Text(
-          name,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: Colors.black87,
+            ],
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          '$score pt',
-          style: TextStyle(
-            color: color,
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-          ),
-        ),
-      ],
+      ),
     );
   }
-}
 
-class _OtherRankCard extends StatelessWidget {
-  final int rank;
-  final String name;
-  final int score;
+  Color _getTrendColor(String trend) {
+    if (trend.startsWith('+')) return Colors.green;
+    if (trend == '0') return Colors.grey;
+    return Colors.red;
+  }
 
-  const _OtherRankCard({
-    required this.rank,
-    required this.name,
-    required this.score,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-        border: Border.all(color: Colors.white.withOpacity(0.7)),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: const Color(0xFFEDE7F6),
-            child: Text(
-              rank.toString(),
-              style: const TextStyle(
-                color: Colors.purple,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              name,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-          ),
-          Text(
-            '$score pt',
-            style: const TextStyle(
-              fontSize: 15,
-              color: Colors.purple,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
+  IconData _getTrendIcon(String trend) {
+    if (trend.startsWith('+')) return Icons.arrow_upward;
+    if (trend == '0') return Icons.remove;
+    return Icons.arrow_downward;
   }
 }

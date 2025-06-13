@@ -1,8 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../widgets/common_header.dart';
+import 'settings/account_settings_screen.dart';
 
-class AccountScreen extends StatelessWidget {
+class AccountScreen extends StatefulWidget {
   const AccountScreen({Key? key}) : super(key: key);
+
+  @override
+  State<AccountScreen> createState() => _AccountScreenState();
+}
+
+class _AccountScreenState extends State<AccountScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+
+    _animation = Tween<double>(begin: 0.7, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,11 +59,12 @@ class AccountScreen extends StatelessWidget {
                 colors: [Color(0xFF9F6FF2), Color(0xFF7B7BFF)],
               ),
             ),
-            child: _ProfileSection(),
+            child: _ProfileSection(animation: _animation),
           ),
           // 統計・実績＋アカウント操作
           Expanded(
             child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
               child: Padding(
                 padding: const EdgeInsets.only(top: 0, bottom: 32),
                 child: Column(
@@ -72,36 +106,51 @@ class AccountScreen extends StatelessWidget {
 }
 
 class _ProfileSection extends StatelessWidget {
+  final Animation<double> animation;
+
+  const _ProfileSection({required this.animation});
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         GestureDetector(
-          onTap: () {},
+          onTap: () {
+            HapticFeedback.lightImpact();
+            // プロフィール画像編集
+          },
           child: Stack(
             alignment: Alignment.bottomRight,
             children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.10),
-                      blurRadius: 16,
+              AnimatedBuilder(
+                animation: animation,
+                builder: (context, child) {
+                  return Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color:
+                              Colors.purple.withOpacity(0.3 * animation.value),
+                          blurRadius: 16 * animation.value,
+                          spreadRadius: 2,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: const Center(
-                  child: Text('🎯', style: TextStyle(fontSize: 48)),
-                ),
+                    child: const Center(
+                      child: Text('🎯', style: TextStyle(fontSize: 48)),
+                    ),
+                  );
+                },
               ),
               Positioned(
                 bottom: 6,
                 right: 6,
                 child: Container(
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
@@ -112,7 +161,8 @@ class _ProfileSection extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: Icon(Icons.edit, color: Color(0xFF8B5CF6), size: 22),
+                  child: const Icon(Icons.edit,
+                      color: Color(0xFF8B5CF6), size: 22),
                 ),
               ),
             ],
@@ -234,13 +284,32 @@ class _StatsSection extends StatelessWidget {
         // 実績バッジ
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Wrap(
-            spacing: 12,
-            runSpacing: 8,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _badge('連勝記録', Icons.emoji_events, Colors.amber),
-              _badge('最高ランク', Icons.military_tech, Colors.purple),
-              _badge('GTOマスター', Icons.psychology, Colors.blue),
+              const Padding(
+                padding: EdgeInsets.only(left: 8.0),
+                child: Text(
+                  '獲得バッジ',
+                  style: TextStyle(
+                    color: Color(0xFF8B5CF6),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                children: [
+                  _badge('連勝記録', Icons.emoji_events, Colors.amber),
+                  _badge('最高ランク', Icons.military_tech, Colors.purple),
+                  _badge('GTOマスター', Icons.psychology, Colors.blue),
+                  _badge('ポットコントロール', Icons.trending_up, Colors.green),
+                  _badge('レンジマスター', Icons.grid_on, Colors.orange),
+                ],
+              ),
             ],
           ),
         ),
@@ -250,6 +319,7 @@ class _StatsSection extends StatelessWidget {
 
   Widget _statCard(IconData icon, String value, String label) {
     return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
@@ -289,15 +359,20 @@ class _StatsSection extends StatelessWidget {
 
   Widget _badge(String label, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+          width: 1,
+        ),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: color, size: 18),
-          const SizedBox(width: 4),
+          const SizedBox(width: 6),
           Text(
             label,
             style: TextStyle(
@@ -327,16 +402,84 @@ class _AccountActionsSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        _actionTile(Icons.edit, 'プロフィール編集', () {}),
-        _actionTile(Icons.lock, 'パスワード変更', () {}),
-        _actionTile(Icons.notifications, '通知設定', () {}),
-        _actionTile(Icons.brightness_6, 'テーマ切り替え', () {}),
-        _actionTile(Icons.logout, 'ログアウト', () {}),
+        _actionTile(
+          icon: Icons.settings,
+          label: '設定',
+          onTap: () {
+            HapticFeedback.lightImpact();
+            // ボトムナビゲーションバーを維持したまま画面遷移
+            Navigator.of(context).push(
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) =>
+                    const AccountSettingsScreen(),
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                  const begin = Offset(1.0, 0.0);
+                  const end = Offset.zero;
+                  const curve = Curves.easeInOut;
+                  var tween = Tween(begin: begin, end: end)
+                      .chain(CurveTween(curve: curve));
+                  var offsetAnimation = animation.drive(tween);
+                  return SlideTransition(
+                      position: offsetAnimation, child: child);
+                },
+                maintainState: true,
+                fullscreenDialog: false,
+              ),
+            );
+          },
+        ),
+        _actionTile(
+          icon: Icons.info_outline,
+          label: 'アプリについて',
+          onTap: () {
+            HapticFeedback.lightImpact();
+            // アプリ情報画面へ遷移
+          },
+        ),
+        _actionTile(
+          icon: Icons.logout,
+          label: 'ログアウト',
+          isDestructive: true,
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            // ログアウト確認ダイアログを表示
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('ログアウト'),
+                content: const Text('ログアウトしてもよろしいですか？'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('キャンセル'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      // ログアウト処理
+                    },
+                    child: const Text(
+                      'ログアウト',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ],
     );
   }
 
-  Widget _actionTile(IconData icon, String label, VoidCallback onTap) {
+  Widget _actionTile({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    bool isDestructive = false,
+  }) {
+    final color = isDestructive ? Colors.red : const Color(0xFF8B5CF6);
     return Card(
       elevation: 0,
       margin: const EdgeInsets.symmetric(vertical: 4),
@@ -344,9 +487,15 @@ class _AccountActionsSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       child: ListTile(
-        leading: Icon(icon, color: const Color(0xFF8B5CF6)),
-        title: Text(label),
-        trailing: const Icon(Icons.chevron_right),
+        leading: Icon(icon, color: color),
+        title: Text(
+          label,
+          style: TextStyle(
+            color: isDestructive ? Colors.red : Colors.black87,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
         onTap: onTap,
       ),
     );

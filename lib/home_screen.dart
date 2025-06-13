@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // HapticFeedback用のインポートを追加
 import 'main.dart'; // 既存の分析画面をインポート
 import 'poker_analysis_screen.dart';
 import 'screens/ranking_screen.dart';
@@ -78,6 +79,8 @@ class _HomeContentState extends State<_HomeContent>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
+  final List<AnimationController> _cardControllers = [];
+  final List<Animation<double>> _cardAnimations = [];
 
   @override
   void initState() {
@@ -89,10 +92,30 @@ class _HomeContentState extends State<_HomeContent>
     _animation = Tween<double>(begin: 0.7, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
+
+    // カードアニメーションの初期化
+    for (int i = 0; i < 4; i++) {
+      final controller = AnimationController(
+        vsync: this,
+        duration: Duration(milliseconds: 400 + (i * 100)),
+      );
+      _cardControllers.add(controller);
+      _cardAnimations.add(
+        Tween<double>(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(parent: controller, curve: Curves.easeOut),
+        ),
+      );
+      Future.delayed(Duration(milliseconds: i * 100), () {
+        if (mounted) controller.forward();
+      });
+    }
   }
 
   @override
   void dispose() {
+    for (var controller in _cardControllers) {
+      controller.dispose();
+    }
     _controller.dispose();
     super.dispose();
   }
@@ -101,135 +124,171 @@ class _HomeContentState extends State<_HomeContent>
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // 背景グラデーション
+        // 背景グラデーション（改善）
         Container(
           width: double.infinity,
           height: double.infinity,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFFA18CD1), Color(0xFFFBC2EB)],
+              colors: [
+                const Color(0xFFA18CD1).withOpacity(0.95),
+                const Color(0xFFFBC2EB).withOpacity(0.95),
+              ],
+              stops: const [0.0, 1.0],
             ),
           ),
         ),
         // メインUI
         SafeArea(
           child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const CommonHeader(),
-                // ユーザー情報セクション
-                Container(
-                  margin: const EdgeInsets.fromLTRB(18, 20, 18, 0),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          // アバター
-                          AnimatedBuilder(
-                            animation: _animation,
-                            builder: (context, child) {
-                              return Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.purple
-                                          .withOpacity(0.3 * _animation.value),
-                                      blurRadius: 24 * _animation.value,
-                                      spreadRadius: 2,
-                                    ),
-                                  ],
-                                ),
-                                child: const CircleAvatar(
-                                  radius: 32,
-                                  backgroundColor: Color(0xFFE1BEE7),
-                                  child: Icon(Icons.person,
-                                      size: 40, color: Colors.purple),
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(width: 16),
-                          // ユーザー情報
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    const Text(
-                                      'SHOOTER',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20,
-                                        color: Colors.purple,
+                // ユーザー情報セクション（改善）
+                Hero(
+                  tag: 'user_card',
+                  child: Container(
+                    margin: const EdgeInsets.fromLTRB(18, 20, 18, 0),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.95),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.purple.withOpacity(0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                          spreadRadius: 2,
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            // アバター（改善）
+                            AnimatedBuilder(
+                              animation: _animation,
+                              builder: (context, child) {
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.purple.withOpacity(
+                                            0.3 * _animation.value),
+                                        blurRadius: 24 * _animation.value,
+                                        spreadRadius: 2,
                                       ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: Colors.purple.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                            color:
-                                                Colors.purple.withOpacity(0.3)),
-                                      ),
-                                      child: const Text(
-                                        'VIP',
-                                        style: TextStyle(
-                                          color: Colors.purple,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 12,
+                                    ],
+                                  ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () {
+                                        // プロフィール詳細へ遷移
+                                      },
+                                      customBorder: const CircleBorder(),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(2),
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Colors.purple.withOpacity(0.8),
+                                              Colors.purple.withOpacity(0.6),
+                                            ],
+                                          ),
+                                        ),
+                                        child: const CircleAvatar(
+                                          radius: 32,
+                                          backgroundColor: Colors.white,
+                                          child: Icon(Icons.person,
+                                              size: 40, color: Colors.purple),
                                         ),
                                       ),
                                     ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                // 進捗バー
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: LinearProgressIndicator(
-                                    value: 0.7,
-                                    backgroundColor:
-                                        Colors.purple.withOpacity(0.1),
-                                    valueColor:
-                                        const AlwaysStoppedAnimation<Color>(
-                                            Colors.purple),
-                                    minHeight: 6,
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '次のレベルまで 300ポイント',
-                                  style: TextStyle(
-                                    color: Colors.purple.withOpacity(0.8),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
+                                );
+                              },
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                            const SizedBox(width: 16),
+                            // ユーザー情報
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        'SHOOTER',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 20,
+                                          color: Colors.purple,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.purple.withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          border: Border.all(
+                                              color: Colors.purple
+                                                  .withOpacity(0.3)),
+                                        ),
+                                        child: const Text(
+                                          'VIP',
+                                          style: TextStyle(
+                                            color: Colors.purple,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  // 進捗バー
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: LinearProgressIndicator(
+                                      value: 0.7,
+                                      backgroundColor:
+                                          Colors.purple.withOpacity(0.1),
+                                      valueColor:
+                                          const AlwaysStoppedAnimation<Color>(
+                                              Colors.purple),
+                                      minHeight: 6,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '次のレベルまで 300ポイント',
+                                    style: TextStyle(
+                                      color: Colors.purple.withOpacity(0.8),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 // クイックアクションセクション
@@ -259,6 +318,7 @@ class _HomeContentState extends State<_HomeContent>
                             onTap: () {
                               // 分析画面へ遷移
                             },
+                            index: 0,
                           ),
                           _buildQuickActionCard(
                             icon: Icons.history,
@@ -268,6 +328,7 @@ class _HomeContentState extends State<_HomeContent>
                             onTap: () {
                               // 履歴画面へ遷移
                             },
+                            index: 1,
                           ),
                           _buildQuickActionCard(
                             icon: Icons.emoji_events,
@@ -277,6 +338,7 @@ class _HomeContentState extends State<_HomeContent>
                             onTap: () {
                               // ランキング画面へ遷移
                             },
+                            index: 2,
                           ),
                           _buildQuickActionCard(
                             icon: Icons.flag,
@@ -286,6 +348,7 @@ class _HomeContentState extends State<_HomeContent>
                             onTap: () {
                               // ミッション画面へ遷移
                             },
+                            index: 3,
                           ),
                         ],
                       ),
@@ -354,53 +417,85 @@ class _HomeContentState extends State<_HomeContent>
     required String subtitle,
     required Color color,
     required VoidCallback onTap,
+    required int index,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: (MediaQuery.of(context).size.width - 48) / 2,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.9),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+    return AnimatedBuilder(
+      animation: _cardAnimations[index],
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(0, 20 * (1 - _cardAnimations[index].value)),
+          child: Opacity(
+            opacity: _cardAnimations[index].value,
+            child: child,
+          ),
+        );
+      },
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onTap();
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            width: (MediaQuery.of(context).size.width - 48) / 2,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.95),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.1),
+                  blurRadius: 15,
+                  offset: const Offset(0, 6),
+                  spreadRadius: 1,
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: color, size: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        color.withOpacity(0.2),
+                        color.withOpacity(0.1),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 24),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.black87,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.black54,
+                    fontSize: 12,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: TextStyle(
-                color: Colors.black54,
-                fontSize: 12,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -413,93 +508,115 @@ class _HomeContentState extends State<_HomeContent>
     required double compliance,
   }) {
     final isWin = result == '勝利';
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: (isWin ? Colors.green : Colors.red).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              hand,
-              style: TextStyle(
-                color: isWin ? Colors.green : Colors.red,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          // 分析詳細へ遷移
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.95),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: (isWin ? Colors.green : Colors.red).withOpacity(0.1),
+                blurRadius: 15,
+                offset: const Offset(0, 6),
+                spreadRadius: 1,
               ),
-            ),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      (isWin ? Colors.green : Colors.red).withOpacity(0.2),
+                      (isWin ? Colors.green : Colors.red).withOpacity(0.1),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  hand,
+                  style: TextStyle(
+                    color: isWin ? Colors.green : Colors.red,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: (isWin ? Colors.green : Colors.red)
-                            .withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        result,
-                        style: TextStyle(
-                          color: isWin ? Colors.green : Colors.red,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: (isWin ? Colors.green : Colors.red)
+                                .withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            result,
+                            style: TextStyle(
+                              color: isWin ? Colors.green : Colors.red,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
+                        const SizedBox(width: 8),
+                        Text(
+                          date,
+                          style: TextStyle(
+                            color: Colors.black54,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: compliance,
+                        backgroundColor: Colors.purple.withOpacity(0.1),
+                        valueColor:
+                            const AlwaysStoppedAnimation<Color>(Colors.purple),
+                        minHeight: 4,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(height: 4),
                     Text(
-                      date,
+                      'GTO準拠度 ${(compliance * 100).toInt()}%',
                       style: TextStyle(
-                        color: Colors.black54,
+                        color: Colors.purple.withOpacity(0.8),
                         fontSize: 12,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: compliance,
-                    backgroundColor: Colors.purple.withOpacity(0.1),
-                    valueColor:
-                        const AlwaysStoppedAnimation<Color>(Colors.purple),
-                    minHeight: 4,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'GTO準拠度 ${(compliance * 100).toInt()}%',
-                  style: TextStyle(
-                    color: Colors.purple.withOpacity(0.8),
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

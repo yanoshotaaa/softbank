@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
 
 class CommonHeader extends StatelessWidget {
-  const CommonHeader({Key? key}) : super(key: key);
+  final String? title;
+  final bool showBackButton;
+  final VoidCallback? onBackPressed;
+
+  const CommonHeader({
+    Key? key,
+    this.title,
+    this.showBackButton = false,
+    this.onBackPressed,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -25,36 +34,64 @@ class CommonHeader extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const SizedBox(width: 8),
-                  const Text('=SoftBank',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  if (showBackButton) ...[
+                    GestureDetector(
+                      onTap: onBackPressed ?? () => Navigator.of(context).pop(),
+                      child: const Icon(
+                        Icons.arrow_back_ios,
+                        size: 20,
+                        color: Color(0xFF8B5CF6),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  if (title != null)
+                    Text(
+                      title!,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Color(0xFF8B5CF6),
+                      ),
+                    )
+                  else
+                    const Text(
+                      '=SoftBank',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
                 ],
               ),
-              Row(
-                children: [
-                  _buildIconWithBadge(
-                    context: context,
-                    icon: Icons.military_tech,
-                    badgeCount: 2,
-                    onTap: () => _showAchievementsDialog(context),
-                  ),
-                  const SizedBox(width: 14),
-                  _buildIconWithBadge(
-                    context: context,
-                    icon: Icons.notifications_none,
-                    badgeCount: 3,
-                    onTap: () => _showNotificationsDialog(context),
-                  ),
-                  const SizedBox(width: 14),
-                  GestureDetector(
-                    onTap: () => _showSettingsDialog(context),
-                    child: const Icon(Icons.settings,
-                        size: 28, color: Color(0xFF8B5CF6)),
-                  ),
-                  const SizedBox(width: 8),
-                ],
-              ),
+              if (!showBackButton)
+                Row(
+                  children: [
+                    _buildIconWithBadge(
+                      context: context,
+                      icon: Icons.military_tech,
+                      badgeCount: 2,
+                      onTap: () => _showAchievementsDialog(context),
+                    ),
+                    const SizedBox(width: 14),
+                    _buildIconWithBadge(
+                      context: context,
+                      icon: Icons.notifications_none,
+                      badgeCount: 3,
+                      onTap: () => _showNotificationsDialog(context),
+                    ),
+                    const SizedBox(width: 14),
+                    GestureDetector(
+                      onTap: () => _showSettingsDialog(context),
+                      child: const Icon(
+                        Icons.settings,
+                        size: 28,
+                        color: Color(0xFF8B5CF6),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                ),
             ],
           ),
         ),
