@@ -499,8 +499,8 @@ class _HomeContentState extends State<HomeContent>
                                               Container(
                                                 padding:
                                                     const EdgeInsets.symmetric(
-                                                  horizontal: 12,
-                                                  vertical: 6,
+                                                  horizontal: 16,
+                                                  vertical: 8,
                                                 ),
                                                 decoration: BoxDecoration(
                                                   color: Colors.white
@@ -508,24 +508,23 @@ class _HomeContentState extends State<HomeContent>
                                                   borderRadius:
                                                       BorderRadius.circular(20),
                                                 ),
-                                                child: Row(
+                                                child: const Row(
                                                   mainAxisSize:
                                                       MainAxisSize.min,
                                                   children: [
-                                                    const Icon(
-                                                      Icons.bolt,
+                                                    Icon(
+                                                      Icons.arrow_forward,
                                                       color: Colors.white,
                                                       size: 16,
                                                     ),
-                                                    const SizedBox(width: 4),
+                                                    SizedBox(width: 4),
                                                     Text(
-                                                      '診断は約3分',
+                                                      '診断を開始',
                                                       style: TextStyle(
-                                                        color: Colors.white
-                                                            .withOpacity(0.9),
-                                                        fontSize: 12,
+                                                        color: Colors.white,
+                                                        fontSize: 14,
                                                         fontWeight:
-                                                            FontWeight.w500,
+                                                            FontWeight.w600,
                                                         fontFamily:
                                                             'Noto Sans JP',
                                                       ),
@@ -536,23 +535,259 @@ class _HomeContentState extends State<HomeContent>
                                             ],
                                           ),
                                         ),
-                                        Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                Colors.white.withOpacity(0.2),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(
-                                            Icons.arrow_forward,
-                                            color: Colors.white,
-                                            size: 24,
-                                          ),
-                                        ),
                                       ],
                                     ),
                                   ),
                                 ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // 予約セクション
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 24, 18, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            '店舗予約',
+                            style: TextStyle(
+                              color: _textPrimaryColor,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'Noto Sans JP',
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: _secondaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.access_time,
+                                  color: _secondaryColor,
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '所要時間：約5分',
+                                  style: TextStyle(
+                                    color: _secondaryColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'Noto Sans JP',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      TweenAnimationBuilder<double>(
+                        duration: const Duration(milliseconds: 300),
+                        tween: Tween(begin: 0.95, end: 1.0),
+                        builder: (context, value, child) {
+                          return Transform.scale(
+                            scale: value,
+                            child: child,
+                          );
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: _textPrimaryColor.withOpacity(0.05),
+                                blurRadius: 15,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                            border: Border.all(
+                              color: _textPrimaryColor.withOpacity(0.1),
+                              width: 1,
+                            ),
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                HapticFeedback.mediumImpact();
+                                Navigator.of(context).push(
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation,
+                                            secondaryAnimation) =>
+                                        const StoreReservationScreen(),
+                                    transitionsBuilder: (context, animation,
+                                        secondaryAnimation, child) {
+                                      const begin = Offset(1.0, 0.0);
+                                      const end = Offset.zero;
+                                      const curve = Curves.easeInOut;
+                                      var tween = Tween(begin: begin, end: end)
+                                          .chain(CurveTween(curve: curve));
+                                      var offsetAnimation =
+                                          animation.drive(tween);
+                                      return SlideTransition(
+                                          position: offsetAnimation,
+                                          child: child);
+                                    },
+                                    maintainState: true,
+                                    fullscreenDialog: false,
+                                  ),
+                                );
+                              },
+                              borderRadius: BorderRadius.circular(20),
+                              child: Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(16),
+                                          decoration: BoxDecoration(
+                                            color: _secondaryColor
+                                                .withOpacity(0.1),
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                          ),
+                                          child: Icon(
+                                            Icons.calendar_today,
+                                            color: _secondaryColor,
+                                            size: 32,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 20),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                '店舗でご相談',
+                                                style: TextStyle(
+                                                  color: _textPrimaryColor,
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.w700,
+                                                  fontFamily: 'Noto Sans JP',
+                                                  letterSpacing: 0.5,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                '最寄りの店舗で専門スタッフがご案内',
+                                                style: TextStyle(
+                                                  color: _textSecondaryColor,
+                                                  fontSize: 14,
+                                                  fontFamily: 'Noto Sans JP',
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            _textPrimaryColor.withOpacity(0.03),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.check_circle_outline,
+                                                color: _secondaryColor,
+                                                size: 16,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              const Text(
+                                                'ご相談可能なサービス',
+                                                style: TextStyle(
+                                                  color: _textPrimaryColor,
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontFamily: 'Noto Sans JP',
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Wrap(
+                                            spacing: 8,
+                                            runSpacing: 8,
+                                            children: [
+                                              _buildServiceChip('機種変更'),
+                                              _buildServiceChip('プラン変更'),
+                                              _buildServiceChip('新規契約'),
+                                              _buildServiceChip('故障相談'),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 12,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: _secondaryColor
+                                                  .withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.arrow_forward,
+                                                  color: _secondaryColor,
+                                                  size: 16,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  '予約する',
+                                                  style: TextStyle(
+                                                    color: _secondaryColor,
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w600,
+                                                    fontFamily: 'Noto Sans JP',
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -865,6 +1100,29 @@ class _HomeContentState extends State<HomeContent>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildServiceChip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: _textPrimaryColor.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: _textPrimaryColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          fontFamily: 'Noto Sans JP',
+        ),
       ),
     );
   }
