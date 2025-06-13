@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../widgets/common_header.dart';
+import 'plan_diagnosis_screen.dart';
 
 class HomeContent extends StatefulWidget {
   final Function(int)? onTabSelected;
@@ -344,6 +345,217 @@ class _HomeContentState extends State<HomeContent>
                             },
                           ),
                         ],
+                      ),
+                    ],
+                  ),
+                ),
+                // 携帯プラン診断セクション
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 24, 18, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '携帯プラン診断',
+                        style: TextStyle(
+                          color: _textPrimaryColor,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'Noto Sans JP',
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TweenAnimationBuilder<double>(
+                        duration: const Duration(milliseconds: 300),
+                        tween: Tween(begin: 0.95, end: 1.0),
+                        builder: (context, value, child) {
+                          return Transform.scale(
+                            scale: value,
+                            child: child,
+                          );
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                _primaryColor.withOpacity(0.8),
+                                _primaryColor.withOpacity(0.6),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: _primaryColor.withOpacity(0.3),
+                                blurRadius: 15,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                HapticFeedback.mediumImpact();
+                                Navigator.of(context).push(
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation,
+                                            secondaryAnimation) =>
+                                        const PlanDiagnosisScreen(),
+                                    transitionsBuilder: (context, animation,
+                                        secondaryAnimation, child) {
+                                      const begin = Offset(1.0, 0.0);
+                                      const end = Offset.zero;
+                                      const curve = Curves.easeInOut;
+                                      var tween = Tween(begin: begin, end: end)
+                                          .chain(CurveTween(curve: curve));
+                                      var offsetAnimation =
+                                          animation.drive(tween);
+                                      return SlideTransition(
+                                          position: offsetAnimation,
+                                          child: child);
+                                    },
+                                    maintainState: true,
+                                    fullscreenDialog: false,
+                                  ),
+                                );
+                              },
+                              borderRadius: BorderRadius.circular(20),
+                              child: Stack(
+                                children: [
+                                  // 装飾的な背景要素
+                                  Positioned(
+                                    right: -20,
+                                    top: -20,
+                                    child: Container(
+                                      width: 100,
+                                      height: 100,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.white.withOpacity(0.1),
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    left: -10,
+                                    bottom: -10,
+                                    child: Container(
+                                      width: 60,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.white.withOpacity(0.1),
+                                      ),
+                                    ),
+                                  ),
+                                  // メインコンテンツ
+                                  Padding(
+                                    padding: const EdgeInsets.all(20),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(16),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                Colors.white.withOpacity(0.2),
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                          ),
+                                          child: const Icon(
+                                            Icons.phone_android,
+                                            color: Colors.white,
+                                            size: 32,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 20),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'あなたに最適なプランを診断',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.w700,
+                                                  fontFamily: 'Noto Sans JP',
+                                                  letterSpacing: 0.5,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                '現在の利用状況から最適なプランを提案',
+                                                style: TextStyle(
+                                                  color: Colors.white
+                                                      .withOpacity(0.9),
+                                                  fontSize: 14,
+                                                  fontFamily: 'Noto Sans JP',
+                                                ),
+                                              ),
+                                              const SizedBox(height: 12),
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                  horizontal: 12,
+                                                  vertical: 6,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white
+                                                      .withOpacity(0.2),
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    const Icon(
+                                                      Icons.bolt,
+                                                      color: Colors.white,
+                                                      size: 16,
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      '診断は約3分',
+                                                      style: TextStyle(
+                                                        color: Colors.white
+                                                            .withOpacity(0.9),
+                                                        fontSize: 12,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                        fontFamily:
+                                                            'Noto Sans JP',
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                Colors.white.withOpacity(0.2),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.arrow_forward,
+                                            color: Colors.white,
+                                            size: 24,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
