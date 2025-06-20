@@ -19,7 +19,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   Widget build(BuildContext context) {
     final double statusBarHeight = MediaQuery.of(context).padding.top;
     return Material(
-      color: const Color(0xFFF5F7FA),
+      color: const Color(0xFFFAFAFA),
       child: Column(
         children: [
           SizedBox(height: statusBarHeight),
@@ -44,7 +44,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF8B5CF6),
+                        color: Color(0xFF2C3E50),
                       ),
                     ),
                     const SizedBox(height: 8),

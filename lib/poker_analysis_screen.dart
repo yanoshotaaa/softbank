@@ -20,16 +20,16 @@ class _PokerAnalysisScreenState extends State<PokerAnalysisScreen>
   bool _showScrollToTop = false;
 
   // カラーパレットの定義
-  static const _primaryColor = Color(0xFF6B46C1); // メインカラー
-  static const _secondaryColor = Color(0xFF9F7AEA); // アクセントカラー
-  static const _backgroundColor = Color(0xFFF7FAFC); // 背景色
-  static const _textPrimaryColor = Color(0xFF2D3748); // 主要テキスト色
-  static const _textSecondaryColor = Color(0xFF718096); // 補助テキスト色
-  static const _successColor = Color(0xFF48BB78); // 成功色
-  static const _warningColor = Color(0xFFED8936); // 警告色
-  static const _errorColor = Color(0xFFE53E3E); // エラー色
-  static const _cardGradientStart = Color(0xFFF3E8FF); // カードグラデーション開始色
-  static const _cardGradientEnd = Color(0xFFE9D8FD); // カードグラデーション終了色
+  static const _primaryColor = Color(0xFF2C3E50); // メインカラー（ダークグレー）
+  static const _secondaryColor = Color(0xFF34495E); // アクセントカラー（ライトグレー）
+  static const _backgroundColor = Color(0xFFFAFAFA); // 背景色（オフホワイト）
+  static const _textPrimaryColor = Color(0xFF2C3E50); // 主要テキスト色
+  static const _textSecondaryColor = Color(0xFF7F8C8D); // 補助テキスト色
+  static const _successColor = Color(0xFF27AE60); // 成功色（グリーン）
+  static const _warningColor = Color(0xFFF39C12); // 警告色（オレンジ）
+  static const _errorColor = Color(0xFFE74C3C); // エラー色（レッド）
+  static const _cardGradientStart = Color(0xFFFFFFFF); // カードグラデーション開始色（白）
+  static const _cardGradientEnd = Color(0xFFF8F9FA); // カードグラデーション終了色（ライトグレー）
 
   @override
   void initState() {
@@ -99,9 +99,9 @@ class _PokerAnalysisScreenState extends State<PokerAnalysisScreen>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  _primaryColor.withOpacity(0.95),
-                  _secondaryColor.withOpacity(0.95),
-                  _backgroundColor.withOpacity(0.95),
+                  _backgroundColor,
+                  Colors.white,
+                  _backgroundColor.withOpacity(0.8),
                 ],
                 stops: const [0.0, 0.5, 1.0],
               ),
@@ -123,7 +123,7 @@ class _PokerAnalysisScreenState extends State<PokerAnalysisScreen>
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          Colors.purple.withOpacity(0.1),
+                          _primaryColor.withOpacity(0.05),
                           Colors.transparent,
                         ],
                       ),
@@ -556,22 +556,43 @@ class _PokerAnalysisScreenState extends State<PokerAnalysisScreen>
   Widget _buildAnalysisSection(PokerAnalysisProvider provider) {
     return Column(
       children: [
+        // 分析結果ヘッダー
         Container(
-          padding: const EdgeInsets.all(30),
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(15),
+            gradient: const LinearGradient(
+              colors: [_cardGradientStart, _cardGradientEnd],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: _primaryColor.withOpacity(0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+            border:
+                Border.all(color: Colors.white.withOpacity(0.8), width: 1.5),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '📊 分析結果',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+              Row(
+                children: [
+                  Icon(Icons.analytics, color: _primaryColor, size: 28),
+                  const SizedBox(width: 12),
+                  const Text(
+                    '分析結果',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: _textPrimaryColor,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
               if (provider.stats != null) _buildStatsGrid(provider.stats!),
@@ -587,10 +608,24 @@ class _PokerAnalysisScreenState extends State<PokerAnalysisScreen>
 
         // 詳細ハンド分析を2番目に表示
         Container(
-          padding: const EdgeInsets.all(30),
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(15),
+            gradient: const LinearGradient(
+              colors: [_cardGradientStart, _cardGradientEnd],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: _primaryColor.withOpacity(0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+            border:
+                Border.all(color: Colors.white.withOpacity(0.8), width: 1.5),
           ),
           child: _buildHandsList(provider.hands, provider),
         ),
@@ -626,28 +661,37 @@ class _PokerAnalysisScreenState extends State<PokerAnalysisScreen>
 
   Widget _buildStatCard(String label, String value) {
     return Container(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: _primaryColor.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: Colors.white.withOpacity(0.8), width: 1),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.amber,
+              color: _primaryColor,
             ),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 8),
           Text(
             label,
             style: TextStyle(
               fontSize: 14,
-              color: Colors.white.withOpacity(0.8),
+              color: _textSecondaryColor,
+              fontWeight: FontWeight.w500,
             ),
             textAlign: TextAlign.center,
           ),
@@ -660,13 +704,19 @@ class _PokerAnalysisScreenState extends State<PokerAnalysisScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '🎯 詳細ハンド分析',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+        Row(
+          children: [
+            Icon(Icons.psychology, color: _primaryColor, size: 24),
+            const SizedBox(width: 10),
+            const Text(
+              '詳細ハンド分析',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: _textPrimaryColor,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 15),
         ListView.builder(
@@ -685,14 +735,19 @@ class _PokerAnalysisScreenState extends State<PokerAnalysisScreen>
     final gtoRecommendation = provider.getGTORecommendation(hand);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 15),
+      margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(10),
-        border: const Border(
-          left: BorderSide(color: Colors.amber, width: 4),
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: _primaryColor.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: Colors.white.withOpacity(0.8), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -702,66 +757,86 @@ class _PokerAnalysisScreenState extends State<PokerAnalysisScreen>
             children: [
               Text(
                 'ハンド #${hand.handId}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.amber,
+                  color: _primaryColor,
                 ),
               ),
-              Text(
-                hand.result == 'win' ? '勝利' : '敗北',
-                style: TextStyle(
-                  color: hand.result == 'win' ? Colors.green : Colors.red,
-                  fontWeight: FontWeight.bold,
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: hand.result == 'win'
+                      ? _successColor.withOpacity(0.1)
+                      : _errorColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: hand.result == 'win'
+                        ? _successColor.withOpacity(0.3)
+                        : _errorColor.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  hand.result == 'win' ? '勝利' : '敗北',
+                  style: TextStyle(
+                    color: hand.result == 'win' ? _successColor : _errorColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 16),
           Text(
             'ポジション: ${_translatePosition(hand.position)}',
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: _textSecondaryColor, fontSize: 14),
           ),
-          const SizedBox(height: 10),
-          const Text(
+          const SizedBox(height: 12),
+          Text(
             'ホールカード:',
             style: TextStyle(
-              color: Colors.white,
+              color: _textPrimaryColor,
               fontWeight: FontWeight.bold,
+              fontSize: 14,
             ),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 8),
           _buildCardsRow(hand.yourCards),
-          const SizedBox(height: 10),
-          const Text(
+          const SizedBox(height: 12),
+          Text(
             'コミュニティカード:',
             style: TextStyle(
-              color: Colors.white,
+              color: _textPrimaryColor,
               fontWeight: FontWeight.bold,
+              fontSize: 14,
             ),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 8),
           _buildCardsRow(hand.communityCards),
-          const SizedBox(height: 15),
-          const Text(
+          const SizedBox(height: 16),
+          Text(
             'アクション:',
             style: TextStyle(
-              color: Colors.white,
+              color: _textPrimaryColor,
               fontWeight: FontWeight.bold,
+              fontSize: 14,
             ),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 8),
           _buildActionsRow(hand.actions),
-          const SizedBox(height: 15),
+          const SizedBox(height: 16),
           _buildFeedbackSection(hand),
           if (gtoRecommendation != null) ...[
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
             _buildGTORecommendationCard(hand, gtoRecommendation),
           ],
 
           // 相手プレイヤーのハンド表示を追加
           if (hand.opponents != null && hand.opponents!.isNotEmpty) ...[
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
             _buildOpponentsSection(hand),
           ],
         ],
@@ -817,16 +892,21 @@ class _PokerAnalysisScreenState extends State<PokerAnalysisScreen>
 
   Widget _buildActionChip(ActionData action) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
+        color: _primaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _primaryColor.withOpacity(0.3),
+          width: 1,
+        ),
       ),
       child: Text(
         '${action.street}: ${action.action}${action.amount > 0 ? ' ${action.amount.toInt()}' : ''}',
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: _primaryColor,
           fontSize: 12,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
@@ -834,29 +914,40 @@ class _PokerAnalysisScreenState extends State<PokerAnalysisScreen>
 
   Widget _buildFeedbackSection(HandData hand) {
     return Container(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(5),
-        border: const Border(
-          left: BorderSide(color: Colors.green, width: 4),
+        color: _successColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _successColor.withOpacity(0.3),
+          width: 1,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '🤖 AI フィードバック',
-            style: TextStyle(
-              color: Colors.green,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+          Row(
+            children: [
+              Icon(Icons.psychology, color: _successColor, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'AI フィードバック',
+                style: TextStyle(
+                  color: _successColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
             _generateFeedback(hand),
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(
+              color: _textPrimaryColor,
+              fontSize: 14,
+              height: 1.5,
+            ),
           ),
         ],
       ),
@@ -873,51 +964,79 @@ class _PokerAnalysisScreenState extends State<PokerAnalysisScreen>
 
     if (applicableHands.isEmpty) {
       return Container(
-        padding: const EdgeInsets.all(20),
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.purple.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(15),
+          gradient: const LinearGradient(
+            colors: [_cardGradientStart, _cardGradientEnd],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: _primaryColor.withOpacity(0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+          border: Border.all(color: Colors.white.withOpacity(0.8), width: 1.5),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '🧠 GTO戦略分析',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.psychology, color: _primaryColor, size: 28),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'GTO戦略分析（BTN vs BB フロップ）',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: _textPrimaryColor,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
-            const Text(
+            const SizedBox(height: 16),
+            Text(
               'BTNポジションでフロップをプレイしたハンドがないため、GTO分析は利用できません。',
-              style: TextStyle(color: Colors.white70),
+              style: TextStyle(color: _textSecondaryColor, fontSize: 14),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 15),
+            const SizedBox(height: 20),
             Container(
-              padding: const EdgeInsets.all(15),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(10),
+                color: _primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _primaryColor.withOpacity(0.3),
+                  width: 1,
+                ),
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'GTO分析に必要な条件:',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: _textPrimaryColor,
                       fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Text(
                     '✅ ボタンポジション（BTN）でのプレイ\n'
                     '✅ フロップ（3枚のコミュニティカード）が配られている\n'
                     '✅ フロップでアクション（ベット、チェック等）を行っている\n'
                     '✅ ビッグブラインド（BB）との対戦',
-                    style: TextStyle(color: Colors.white70),
+                    style: TextStyle(color: _textSecondaryColor, fontSize: 13),
                   ),
                 ],
               ),
@@ -962,41 +1081,70 @@ class _PokerAnalysisScreenState extends State<PokerAnalysisScreen>
         totalAnalyzed > 0 ? (gtoOptimalCount / totalAnalyzed) * 100 : 0.0;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.purple.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(15),
+        gradient: const LinearGradient(
+          colors: [_cardGradientStart, _cardGradientEnd],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: _primaryColor.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+        border: Border.all(color: Colors.white.withOpacity(0.8), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '🧠 GTO戦略分析（BTN vs BB フロップ）',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.psychology, color: _primaryColor, size: 28),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'GTO戦略分析（BTN vs BB フロップ）',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: _textPrimaryColor,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 20),
 
           // Summary header
           Container(
-            padding: const EdgeInsets.all(15),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.purple.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(10),
+              color: _primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: _primaryColor.withOpacity(0.3),
+                width: 1,
+              ),
             ),
             child: Column(
               children: [
                 Text(
-                  '📊 分析対象: $totalAnalyzed ハンド（全${provider.hands.length}ハンド中）',
-                  style: const TextStyle(color: Colors.white),
+                  '分析対象: $totalAnalyzed ハンド（全${provider.hands.length}ハンド中）',
+                  style: TextStyle(
+                      color: _textPrimaryColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '💡 ボタンポジションでのフロップ戦略をGTO理論と比較分析します',
-                  style: TextStyle(color: Colors.white.withOpacity(0.8)),
+                  'ボタンポジションでのフロップ戦略をGTO理論と比較分析します',
+                  style: TextStyle(color: _textSecondaryColor, fontSize: 13),
                 ),
               ],
             ),
@@ -1006,12 +1154,12 @@ class _PokerAnalysisScreenState extends State<PokerAnalysisScreen>
 
           // Individual hand analysis
           if (gtoResults.isNotEmpty) ...[
-            const Text(
-              '📋 ハンド別GTO分析',
+            Text(
+              'ハンド別GTO分析',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: _textPrimaryColor,
               ),
             ),
             const SizedBox(height: 15),
@@ -1035,212 +1183,256 @@ class _PokerAnalysisScreenState extends State<PokerAnalysisScreen>
   Widget _buildGTOHandAnalysisCard(Map<String, dynamic> result) {
     final hand = result['hand'] as HandData;
     final gtoRec = result['gtoRec'] as GTORecommendation;
-    final flopAction = result['flopAction'] as ActionData;
     final actualAction = result['actualAction'] as String;
     final isOptimal = result['isOptimal'] as bool;
 
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // タイムライン
+          _buildTimeline(isOptimal),
+          const SizedBox(width: 12),
+          // 分析コンテンツ
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHandHeader(hand, gtoRec),
+                const SizedBox(height: 12),
+                _buildGTOActionCard(gtoRec),
+                const SizedBox(height: 12),
+                _buildActualActionCard(actualAction, isOptimal),
+                const SizedBox(height: 12),
+                _buildActionFrequencies(gtoRec),
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimeline(bool isOptimal) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(15),
+      width: 12,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-        border: Border(
-          left: BorderSide(
-            color: isOptimal ? Colors.green : Colors.red,
-            width: 4,
+        color: (isOptimal ? _successColor : _errorColor).withOpacity(0.15),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Center(
+        child: Container(
+          width: 4,
+          decoration: BoxDecoration(
+            color: isOptimal ? _successColor : _errorColor,
+            borderRadius: BorderRadius.circular(2),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildHandHeader(HandData hand, GTORecommendation gtoRec) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Cards
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Text("Hand: ",
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                ...hand.yourCards.map((c) => _buildPlayingCard(c)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Text("Board: ",
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                ...gtoRec.board.map((c) => _buildPlayingCard(c)),
+              ],
+            ),
+          ],
+        ),
+        // EV and Similarity
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              'EV: ${gtoRec.ev.toStringAsFixed(1)}',
+              style: TextStyle(
+                color: _textPrimaryColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+            if (!gtoRec.isExactMatch) ...[
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _warningColor.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  gtoRec.similarityScore != null
+                      ? '類似 ${(gtoRec.similarityScore! * 100).toStringAsFixed(0)}%'
+                      : '類似',
+                  style: TextStyle(
+                    color: _warningColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGTOActionCard(GTORecommendation gtoRec) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _primaryColor.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Icon(Icons.psychology, color: _primaryColor, size: 18),
+              const SizedBox(width: 8),
               Text(
-                'ハンド #${hand.handId}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              Row(
-                children: [
-                  Text(
-                    'EV: ${gtoRec.ev.toStringAsFixed(1)}',
-                    style: TextStyle(
-                      color: Colors.purple.shade200,
-                      fontSize: 14,
-                    ),
-                  ),
-                  if (!gtoRec.isExactMatch) ...[
-                    const SizedBox(width: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        gtoRec.similarityScore != null
-                            ? '類似 ${(gtoRec.similarityScore! * 100).toStringAsFixed(0)}%'
-                            : '類似',
-                        style: const TextStyle(
-                          color: Colors.orange,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 10),
-
-          // Board cards
-          Row(
-            children: [
-              const Text(
-                'ボード: ',
+                'GTO推奨アクション',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: _primaryColor,
                   fontWeight: FontWeight.bold,
+                  fontSize: 14,
                 ),
               ),
-              ...gtoRec.board.map((card) => Container(
-                    margin: const EdgeInsets.only(right: 5),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: Text(
-                      card,
-                      style: TextStyle(
-                        color: _isRedCard(card) ? Colors.red : Colors.black,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  )),
             ],
           ),
-
-          const SizedBox(height: 10),
-
-          // GTO recommendation
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.purple.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: 8),
+          Text.rich(
+            TextSpan(
+              text: 'アクション: ',
+              style: TextStyle(color: _textSecondaryColor, fontSize: 13),
               children: [
-                Row(
-                  children: [
-                    const Text(
-                      'GTO推奨: ',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    Text(
+                TextSpan(
+                  text:
                       '${gtoRec.bestAction} (${gtoRec.bestFrequency.toStringAsFixed(1)}%)',
-                      style: const TextStyle(
-                        color: Colors.amber,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  'エクイティ: ${gtoRec.equity.toStringAsFixed(1)}%',
-                  style: TextStyle(color: Colors.white.withOpacity(0.9)),
+                  style: TextStyle(
+                      color: _primaryColor, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
           ),
-
-          const SizedBox(height: 10),
-
-          // Actual action vs GTO
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: isOptimal
-                  ? Colors.green.withOpacity(0.2)
-                  : Colors.red.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 5,
-              alignment: WrapAlignment.start,
-              children: [
-                const Text(
-                  '実際のアクション: ',
-                  style: TextStyle(color: Colors.white),
-                ),
-                Text(
-                  actualAction,
-                  style: TextStyle(
-                    color: isOptimal ? Colors.green : Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  isOptimal ? '✅ GTO最適' : '⚠️ GTO非最適',
-                  style: TextStyle(
-                    color: isOptimal ? Colors.green : Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          // Action frequencies
-          const Text(
-            'アクション頻度:',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 5),
-          Wrap(
-            spacing: 8,
-            runSpacing: 5,
-            children: gtoRec.allActions.entries.map((entry) {
-              return Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Text(
-                  '${entry.key}: ${entry.value.toStringAsFixed(1)}%',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                  ),
-                ),
-              );
-            }).toList(),
+          const SizedBox(height: 4),
+          Text(
+            'エクイティ: ${gtoRec.equity.toStringAsFixed(1)}%',
+            style: TextStyle(color: _textSecondaryColor, fontSize: 13),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildActualActionCard(String actualAction, bool isOptimal) {
+    final color = isOptimal ? _successColor : _errorColor;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(isOptimal ? Icons.check_circle : Icons.warning,
+                  color: color, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                '実際のアクション',
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text.rich(
+            TextSpan(
+              text: 'アクション: ',
+              style: TextStyle(color: _textSecondaryColor, fontSize: 13),
+              children: [
+                TextSpan(
+                  text: actualAction,
+                  style: TextStyle(color: color, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            isOptimal ? 'GTO最適' : 'GTO非最適',
+            style: TextStyle(
+                color: color, fontWeight: FontWeight.bold, fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionFrequencies(GTORecommendation gtoRec) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'アクション頻度:',
+          style: TextStyle(
+            color: _textSecondaryColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: gtoRec.allActions.entries.map((entry) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Text(
+                '${entry.key}: ${entry.value.toStringAsFixed(1)}%',
+                style: TextStyle(
+                  color: _textSecondaryColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 
@@ -1441,7 +1633,7 @@ class _PokerAnalysisScreenState extends State<PokerAnalysisScreen>
               color: isOptimal
                   ? Colors.green.withOpacity(0.2)
                   : Colors.red.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(5),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Wrap(
               spacing: 8,
@@ -1598,7 +1790,7 @@ class _PokerAnalysisScreenState extends State<PokerAnalysisScreen>
     String handStrength = _evaluateHandStrength(hand.yourCards);
     String positionAdvice = hand.position == 'button'
         ? 'レイトポジションの利点を活かせています。'
-        : 'ポジションを考慮したプレイを心がけましょう。';
+        : 'ポジションを考慈したプレイを心がけましょう。';
 
     String resultFeedback =
         hand.result == 'win' ? '良いプレイで勝利を収めました！' : '次回はより戦略的なアプローチを検討してみてください。';

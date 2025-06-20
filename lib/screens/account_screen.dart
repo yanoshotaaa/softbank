@@ -41,7 +41,7 @@ class _AccountScreenState extends State<AccountScreen>
   Widget build(BuildContext context) {
     final double statusBarHeight = MediaQuery.of(context).padding.top;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFFAFAFA),
       body: Column(
         children: [
           // ステータスバー部分
@@ -56,7 +56,7 @@ class _AccountScreenState extends State<AccountScreen>
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFF9F6FF2), Color(0xFF7B7BFF)],
+                colors: [Color(0xFF2C3E50), Color(0xFF34495E)],
               ),
             ),
             child: _ProfileSection(animation: _animation),
@@ -133,8 +133,8 @@ class _ProfileSection extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color:
-                              Colors.purple.withOpacity(0.3 * animation.value),
+                          color: const Color(0xFF2C3E50)
+                              .withOpacity(0.3 * animation.value),
                           blurRadius: 16 * animation.value,
                           spreadRadius: 2,
                         ),
@@ -162,7 +162,7 @@ class _ProfileSection extends StatelessWidget {
                     ],
                   ),
                   child: const Icon(Icons.edit,
-                      color: Color(0xFF8B5CF6), size: 22),
+                      color: Color(0xFF2C3E50), size: 22),
                 ),
               ),
             ],
@@ -250,7 +250,7 @@ class _StatsSection extends StatelessWidget {
           child: Text(
             '統計・実績',
             style: TextStyle(
-              color: Color(0xFF8B5CF6),
+              color: Color(0xFF2C3E50),
               fontWeight: FontWeight.bold,
               fontSize: 18,
             ),
@@ -292,7 +292,7 @@ class _StatsSection extends StatelessWidget {
                 child: Text(
                   '獲得バッジ',
                   style: TextStyle(
-                    color: Color(0xFF8B5CF6),
+                    color: Color(0xFF2C3E50),
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -334,12 +334,12 @@ class _StatsSection extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: const Color(0xFF8B5CF6), size: 32),
+          Icon(icon, color: const Color(0xFF2C3E50), size: 32),
           const SizedBox(height: 8),
           Text(
             value,
             style: const TextStyle(
-              color: Color(0xFF8B5CF6),
+              color: Color(0xFF2C3E50),
               fontWeight: FontWeight.bold,
               fontSize: 22,
             ),
@@ -396,7 +396,7 @@ class _AccountActionsSection extends StatelessWidget {
         const Text(
           'アカウント設定',
           style: TextStyle(
-            color: Color(0xFF8B5CF6),
+            color: Color(0xFF2C3E50),
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
@@ -479,7 +479,7 @@ class _AccountActionsSection extends StatelessWidget {
     required VoidCallback onTap,
     bool isDestructive = false,
   }) {
-    final color = isDestructive ? Colors.red : const Color(0xFF8B5CF6);
+    final color = isDestructive ? Colors.red : const Color(0xFF2C3E50);
     return Card(
       elevation: 0,
       margin: const EdgeInsets.symmetric(vertical: 4),

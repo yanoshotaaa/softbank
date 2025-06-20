@@ -40,7 +40,7 @@ class CommonHeader extends StatelessWidget {
                       child: const Icon(
                         Icons.arrow_back_ios,
                         size: 20,
-                        color: Color(0xFF8B5CF6),
+                        color: Color(0xFF2C3E50),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -51,7 +51,7 @@ class CommonHeader extends StatelessWidget {
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
-                        color: Color(0xFF8B5CF6),
+                        color: Color(0xFF2C3E50),
                       ),
                     )
                   else
@@ -86,7 +86,7 @@ class CommonHeader extends StatelessWidget {
                       child: const Icon(
                         Icons.settings,
                         size: 28,
-                        color: Color(0xFF8B5CF6),
+                        color: Color(0xFF2C3E50),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -111,7 +111,7 @@ class CommonHeader extends StatelessWidget {
       children: [
         GestureDetector(
           onTap: onTap,
-          child: Icon(icon, size: 28, color: const Color(0xFF8B5CF6)),
+          child: Icon(icon, size: 28, color: const Color(0xFF2C3E50)),
         ),
         if (badgeCount > 0)
           Positioned(
@@ -152,13 +152,13 @@ class CommonHeader extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: unlocked
-                  ? const Color(0xFF8B5CF6).withOpacity(0.1)
+                  ? const Color(0xFF2C3E50).withOpacity(0.1)
                   : Colors.grey.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               unlocked ? Icons.military_tech : Icons.lock_outline,
-              color: unlocked ? const Color(0xFF8B5CF6) : Colors.grey,
+              color: unlocked ? const Color(0xFF2C3E50) : Colors.grey,
               size: 20,
             ),
           ),
@@ -186,7 +186,7 @@ class CommonHeader extends StatelessWidget {
             ),
           ),
           if (unlocked)
-            const Icon(Icons.check_circle, color: Color(0xFF8B5CF6), size: 20)
+            const Icon(Icons.check_circle, color: Color(0xFF2C3E50), size: 20)
           else
             const Icon(Icons.radio_button_unchecked,
                 color: Colors.grey, size: 20),

@@ -60,9 +60,34 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'SoftBank',
         theme: ThemeData(
-          primarySwatch: Colors.purple,
+          primarySwatch: Colors.grey,
+          primaryColor: const Color(0xFF2C3E50),
+          scaffoldBackgroundColor: const Color(0xFFFAFAFA),
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.white,
+            foregroundColor: Color(0xFF2C3E50),
+            elevation: 0,
+            centerTitle: true,
+          ),
+          cardTheme: const CardThemeData(
+            color: Colors.white,
+            elevation: 2,
+            shadowColor: Color(0x1A000000),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+            ),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2C3E50),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
           fontFamily: 'Noto Sans JP',
-          scaffoldBackgroundColor: const Color(0xFFF7FAFC),
         ),
         home: const HomeScreen(),
       ),

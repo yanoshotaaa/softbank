@@ -36,7 +36,7 @@ class _ThemeSettingsScreenState extends State<ThemeSettingsScreen> {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF8B5CF6),
+                        color: Color(0xFF2C3E50),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -70,7 +70,7 @@ class _ThemeSettingsScreenState extends State<ThemeSettingsScreen> {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF8B5CF6),
+                              color: Color(0xFF2C3E50),
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -84,7 +84,7 @@ class _ThemeSettingsScreenState extends State<ThemeSettingsScreen> {
                                 _selectedTheme = value!;
                               });
                             },
-                            activeColor: const Color(0xFF8B5CF6),
+                            activeColor: const Color(0xFF2C3E50),
                           ),
                           RadioListTile<String>(
                             title: const Text('ライトモード'),
@@ -96,7 +96,7 @@ class _ThemeSettingsScreenState extends State<ThemeSettingsScreen> {
                                 _selectedTheme = value!;
                               });
                             },
-                            activeColor: const Color(0xFF8B5CF6),
+                            activeColor: const Color(0xFF2C3E50),
                           ),
                           RadioListTile<String>(
                             title: const Text('ダークモード'),
@@ -108,7 +108,7 @@ class _ThemeSettingsScreenState extends State<ThemeSettingsScreen> {
                                 _selectedTheme = value!;
                               });
                             },
-                            activeColor: const Color(0xFF8B5CF6),
+                            activeColor: const Color(0xFF2C3E50),
                           ),
                         ],
                       ),
@@ -136,7 +136,7 @@ class _ThemeSettingsScreenState extends State<ThemeSettingsScreen> {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF8B5CF6),
+                              color: Color(0xFF2C3E50),
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -150,7 +150,7 @@ class _ThemeSettingsScreenState extends State<ThemeSettingsScreen> {
                                 _useDynamicColor = value;
                               });
                             },
-                            activeColor: const Color(0xFF8B5CF6),
+                            activeColor: const Color(0xFF2C3E50),
                           ),
                           if (!_useDynamicColor) ...[
                             const SizedBox(height: 16),
@@ -166,12 +166,12 @@ class _ThemeSettingsScreenState extends State<ThemeSettingsScreen> {
                               spacing: 12,
                               runSpacing: 12,
                               children: [
-                                _buildColorOption(const Color(0xFF8B5CF6)),
-                                _buildColorOption(const Color(0xFFEC4899)),
-                                _buildColorOption(const Color(0xFF3B82F6)),
-                                _buildColorOption(const Color(0xFF10B981)),
-                                _buildColorOption(const Color(0xFFF59E0B)),
-                                _buildColorOption(const Color(0xFFEF4444)),
+                                _buildColorOption(const Color(0xFF2C3E50)),
+                                _buildColorOption(const Color(0xFF34495E)),
+                                _buildColorOption(const Color(0xFF7F8C8D)),
+                                _buildColorOption(const Color(0xFF27AE60)),
+                                _buildColorOption(const Color(0xFFF39C12)),
+                                _buildColorOption(const Color(0xFFE74C3C)),
                               ],
                             ),
                           ],

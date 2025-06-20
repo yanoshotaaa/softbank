@@ -22,7 +22,7 @@ class _PasswordChangeScreenState extends State<PasswordChangeScreen> {
   Widget build(BuildContext context) {
     final double statusBarHeight = MediaQuery.of(context).padding.top;
     return Material(
-      color: const Color(0xFFF5F7FA),
+      color: const Color(0xFFFAFAFA),
       child: Column(
         children: [
           SizedBox(height: statusBarHeight),
@@ -42,7 +42,7 @@ class _PasswordChangeScreenState extends State<PasswordChangeScreen> {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF8B5CF6),
+                          color: Color(0xFF2C3E50),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -150,7 +150,7 @@ class _PasswordChangeScreenState extends State<PasswordChangeScreen> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.purple.withOpacity(0.1),
+                          color: const Color(0xFF2C3E50).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
@@ -160,7 +160,7 @@ class _PasswordChangeScreenState extends State<PasswordChangeScreen> {
                               'パスワード要件',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF8B5CF6),
+                                color: Color(0xFF2C3E50),
                               ),
                             ),
                             SizedBox(height: 8),
@@ -182,7 +182,7 @@ class _PasswordChangeScreenState extends State<PasswordChangeScreen> {
                             }
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF8B5CF6),
+                            backgroundColor: const Color(0xFF2C3E50),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),

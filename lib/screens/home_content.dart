@@ -21,16 +21,16 @@ class _HomeContentState extends State<HomeContent>
   bool _showScrollToTop = false;
 
   // カラーパレットの定義
-  static const _primaryColor = Color(0xFF6B46C1); // メインカラー
-  static const _secondaryColor = Color(0xFF9F7AEA); // アクセントカラー
-  static const _backgroundColor = Color(0xFFF7FAFC); // 背景色
-  static const _textPrimaryColor = Color(0xFF2D3748); // 主要テキスト色
-  static const _textSecondaryColor = Color(0xFF718096); // 補助テキスト色
-  static const _successColor = Color(0xFF48BB78); // 成功色
-  static const _warningColor = Color(0xFFED8936); // 警告色
-  static const _errorColor = Color(0xFFE53E3E); // エラー色
-  static const _cardGradientStart = Color(0xFFF3E8FF); // カードグラデーション開始色
-  static const _cardGradientEnd = Color(0xFFE9D8FD); // カードグラデーション終了色
+  static const _primaryColor = Color(0xFF2C3E50); // メインカラー（ダークグレー）
+  static const _secondaryColor = Color(0xFF34495E); // アクセントカラー（ライトグレー）
+  static const _backgroundColor = Color(0xFFFAFAFA); // 背景色（オフホワイト）
+  static const _textPrimaryColor = Color(0xFF2C3E50); // 主要テキスト色
+  static const _textSecondaryColor = Color(0xFF7F8C8D); // 補助テキスト色
+  static const _successColor = Color(0xFF27AE60); // 成功色（グリーン）
+  static const _warningColor = Color(0xFFF39C12); // 警告色（オレンジ）
+  static const _errorColor = Color(0xFFE74C3C); // エラー色（レッド）
+  static const _cardGradientStart = Color(0xFFFFFFFF); // カードグラデーション開始色（白）
+  static const _cardGradientEnd = Color(0xFFF8F9FA); // カードグラデーション終了色（ライトグレー）
 
   @override
   void initState() {
@@ -73,9 +73,9 @@ class _HomeContentState extends State<HomeContent>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                _primaryColor.withOpacity(0.95),
-                _secondaryColor.withOpacity(0.95),
-                _backgroundColor.withOpacity(0.95),
+                _backgroundColor,
+                Colors.white,
+                _backgroundColor.withOpacity(0.8),
               ],
               stops: const [0.0, 0.5, 1.0],
             ),
@@ -97,7 +97,7 @@ class _HomeContentState extends State<HomeContent>
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        _primaryColor.withOpacity(0.1),
+                        _primaryColor.withOpacity(0.05),
                         Colors.transparent,
                       ],
                     ),

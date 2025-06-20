@@ -15,15 +15,17 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen>
     with SingleTickerProviderStateMixin {
-  // カラーパレット
-  static const _primaryColor = Color(0xFF6B46C1);
-  static const _secondaryColor = Color(0xFF9F7AEA);
-  static const _backgroundColor = Color(0xFFF7FAFC);
-  static const _textPrimaryColor = Color(0xFF2D3748);
-  static const _textSecondaryColor = Color(0xFF718096);
-  static const _successColor = Color(0xFF48BB78);
-  static const _warningColor = Color(0xFFED8936);
-  static const _errorColor = Color(0xFFE53E3E);
+  // カラーパレットの定義
+  static const _primaryColor = Color(0xFF2C3E50); // メインカラー（ダークグレー）
+  static const _secondaryColor = Color(0xFF34495E); // アクセントカラー（ライトグレー）
+  static const _backgroundColor = Color(0xFFFAFAFA); // 背景色（オフホワイト）
+  static const _textPrimaryColor = Color(0xFF2C3E50); // 主要テキスト色
+  static const _textSecondaryColor = Color(0xFF7F8C8D); // 補助テキスト色
+  static const _successColor = Color(0xFF27AE60); // 成功色（グリーン）
+  static const _warningColor = Color(0xFFF39C12); // 警告色（オレンジ）
+  static const _errorColor = Color(0xFFE74C3C); // エラー色（レッド）
+  static const _cardGradientStart = Color(0xFFFFFFFF); // カードグラデーション開始色（白）
+  static const _cardGradientEnd = Color(0xFFF8F9FA); // カードグラデーション終了色（ライトグレー）
 
   late final AnimationController _animationController;
   late final Animation<double> _fadeAnimation;
