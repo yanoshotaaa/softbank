@@ -429,75 +429,53 @@ class PlanDiagnosisResultScreen extends StatelessWidget {
   }
 
   Widget _buildScoreBreakdownCard(
-      BuildContext context, Map<String, dynamic> scoreBreakdown) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ...scoreBreakdown.entries.map<Widget>((entry) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    _getScoreLabel(entry.key),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF6B7280),
-                      fontFamily: 'Noto Sans JP',
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  flex: 3,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '${entry.value}点',
-                        style: const TextStyle(
-                          fontSize: 14,
+      BuildContext context, Map<String, dynamic> breakdown) {
+    final entries = breakdown.entries.toList();
+    final totalScore = entries.fold<int>(0, (sum, e) => sum + (e.value as int));
+
+    return _buildDetailCard(
+      context,
+      entries.map((entry) {
+        final score = entry.value as int;
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    entry.key,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           fontWeight: FontWeight.bold,
-                          fontFamily: 'Noto Sans JP',
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      LinearProgressIndicator(
-                        value: (entry.value as num) / 3,
-                        backgroundColor: Colors.grey[200],
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          (entry.value as num) >= 2
-                              ? Colors.green
-                              : Colors.orange,
-                        ),
-                      ),
-                    ],
                   ),
+                  Text(
+                    '$score / ${totalScore > 0 ? totalScore : 'N/A'}',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              LinearProgressIndicator(
+                value: totalScore > 0 ? score / totalScore : 0,
+                backgroundColor: Colors.grey[200],
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  _getColorForScore(score / (totalScore == 0 ? 1 : totalScore)),
                 ),
-              ],
-            ),
-          );
-        }).toList(),
-      ],
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 
-  String _getScoreLabel(String key) {
-    switch (key) {
-      case 'data_usage':
-        return 'データ使用量';
-      case 'call_usage':
-        return '通話使用量';
-      case 'budget':
-        return '予算';
-      case 'use_cases':
-        return '使用用途';
-      default:
-        return key;
-    }
+  Color _getColorForScore(double score) {
+    if (score < 0.3) return Colors.red;
+    if (score < 0.6) return Colors.orange;
+    return Colors.green;
   }
 
   Widget _buildAlternativePlanCard(
@@ -562,185 +540,104 @@ class PlanDiagnosisResultScreen extends StatelessWidget {
   }
 
   Map<String, dynamic> _calculateResult(List<Map<String, dynamic>> answers) {
-    // プランの定義
-    final plans = <String, Map<String, dynamic>>{
-      'basic': <String, dynamic>{
-        'name': 'ベーシックプラン',
-        'price': 2980,
-        'data': '3GB',
-        'features': <String>['シンプルな料金体系', '必要最小限の機能', '安定した通信品質'],
-        'conditions': <String, List<String>>{
-          'data_usage': <String>['少ない'],
-          'call_usage': <String>['少ない'],
-          'budget': <String>['安い'],
-          'use_cases': <String>['メール', 'SNS']
-        },
-        'analysis': <String, List<String>>{
-          'strengths': <String>['コストパフォーマンスが良い', 'シンプルで分かりやすい'],
-          'weaknesses': <String>['データ容量が限定的', '機能が限定的'],
-          'suitable_for': <String>['データ使用量が少ない方', 'シンプルな使い方の方']
-        }
-      },
-      'standard': <String, dynamic>{
-        'name': 'スタンダードプラン',
-        'price': 4980,
-        'data': '20GB',
-        'features': <String>['バランスの取れた機能', '快適な通信速度', '充実したサービス'],
-        'conditions': <String, List<String>>{
-          'data_usage': <String>['普通'],
-          'call_usage': <String>['普通'],
-          'budget': <String>['普通'],
-          'use_cases': <String>['Web閲覧', '動画視聴', 'オンラインゲーム']
-        },
-        'analysis': <String, List<String>>{
-          'strengths': <String>['バランスの取れた機能', '十分なデータ容量'],
-          'weaknesses': <String>['プレミアム機能は限定的', '料金がやや高め'],
-          'suitable_for': <String>['一般的な使い方の方', '家族で利用する方']
-        }
-      },
-      'premium': <String, dynamic>{
-        'name': 'プレミアムプラン',
-        'price': 7980,
-        'data': '無制限',
-        'features': <String>['最速通信速度', '充実した特典', 'プレミアムサポート'],
-        'conditions': <String, List<String>>{
-          'data_usage': <String>['多い', '非常に多い'],
-          'call_usage': <String>['多い', '非常に多い'],
-          'budget': <String>['高い'],
-          'use_cases': <String>['4K動画視聴', 'クラウドゲーム', 'リモートワーク']
-        },
-        'analysis': <String, List<String>>{
-          'strengths': <String>['無制限データ', '最速通信速度', '充実した特典'],
-          'weaknesses': <String>['料金が高い', '一部機能は過剰'],
-          'suitable_for': <String>['大容量データを使用する方', 'ビジネス利用の方']
-        }
-      }
-    };
+    // スコア計算ロジック
+    int dataScore = 0;
+    int callScore = 0;
+    int optionScore = 0;
+    int discountScore = 0;
 
-    // ユーザーの回答を取得
-    final dataUsage = answers[1]['answer'] as String?;
-    final callUsage = answers[2]['answer'] as String?;
-    final budget = answers[4]['answer'] as String?;
-    final useCases =
-        (answers[3]['answer'] as List<dynamic>?)?.cast<String>() ?? [];
+    // データ使用量
+    final dataUsageAnswer = answers.firstWhere(
+      (a) => a['question_id'] == 1,
+      orElse: () => {'answer_value': 0},
+    );
+    final dataUsage = dataUsageAnswer['answer_value'] as int;
+    if (dataUsage < 5) dataScore = 1;
+    if (dataUsage >= 5 && dataUsage < 20) dataScore = 2;
+    if (dataUsage >= 20 && dataUsage < 50) dataScore = 3;
+    if (dataUsage >= 50) dataScore = 4;
 
-    // 各プランのスコアを計算
-    Map<String, int> scores = {};
-    Map<String, Map<String, dynamic>> analysis = {};
+    // 通話時間
+    final callUsageAnswer = answers.firstWhere(
+      (a) => a['question_id'] == 2,
+      orElse: () => {'answer_value': 'short'},
+    );
+    final callUsage = callUsageAnswer['answer_value'] as String;
+    if (callUsage == 'short') callScore = 1;
+    if (callUsage == 'medium') callScore = 2;
+    if (callUsage == 'long') callScore = 3;
 
-    plans.forEach((planId, plan) {
-      int score = 0;
-      final conditions = plan['conditions'] as Map<String, List<String>>;
-      final planAnalysis = plan['analysis'] as Map<String, List<String>>;
+    // オプション
+    final optionsAnswer = answers.firstWhere(
+      (a) => a['question_id'] == 3,
+      orElse: () => {'answer_value': []},
+    );
+    final options = optionsAnswer['answer_value'] as List;
+    optionScore = options.length;
 
-      // データ使用量の評価（重み: 3）
-      if (conditions['data_usage']?.contains(dataUsage) ?? false) {
-        score += 3;
-      } else {
-        // 近い条件の場合、部分点を付与
-        if (dataUsage == '普通' && planId == 'basic') score += 1;
-        if (dataUsage == '多い' && planId == 'standard') score += 1;
-        if (dataUsage == '非常に多い' && planId == 'standard') score += 2;
-      }
+    // 割引
+    final discountsAnswer = answers.firstWhere(
+      (a) => a['question_id'] == 4,
+      orElse: () => {'answer_value': []},
+    );
+    final discounts = discountsAnswer['answer_value'] as List;
+    discountScore = discounts.length;
 
-      // 通話使用量の評価（重み: 2）
-      if (conditions['call_usage']?.contains(callUsage) ?? false) {
-        score += 2;
-      } else {
-        // 近い条件の場合、部分点を付与
-        if (callUsage == '普通' && planId == 'basic') score += 1;
-        if (callUsage == '多い' && planId == 'standard') score += 1;
-      }
+    int totalScore = dataScore + callScore + optionScore + discountScore;
 
-      // 予算の評価（重み: 4）
-      if (conditions['budget']?.contains(budget) ?? false) {
-        score += 4;
-      } else {
-        // 予算が近い場合、部分点を付与
-        if (budget == '普通' && planId == 'basic') score += 2;
-        if (budget == '高い' && planId == 'standard') score += 2;
-        if (budget == '普通' && planId == 'premium') score += 1;
-      }
-
-      // 使用用途の評価（重み: 1/用途）
-      int useCaseScore = 0;
-      for (var useCase in useCases) {
-        if (conditions['use_cases']?.contains(useCase) ?? false) {
-          useCaseScore++;
-        }
-      }
-      score += useCaseScore;
-
-      // プランごとの特徴に基づく調整
-      if (planId == 'basic' && useCases.length <= 2) score += 1;
-      if (planId == 'standard' && useCases.length >= 3) score += 1;
-      if (planId == 'premium' && useCases.length >= 4) score += 1;
-
-      scores[planId] = score;
-
-      // プランごとの詳細分析
-      analysis[planId] = {
-        'strengths': planAnalysis['strengths'] ?? [],
-        'weaknesses': planAnalysis['weaknesses'] ?? [],
-        'suitable_for': planAnalysis['suitable_for'] ?? [],
-        'score_breakdown': {
-          'data_usage':
-              conditions['data_usage']?.contains(dataUsage) ?? false ? 3 : 0,
-          'call_usage':
-              conditions['call_usage']?.contains(callUsage) ?? false ? 2 : 0,
-          'budget': conditions['budget']?.contains(budget) ?? false ? 4 : 0,
-          'use_cases': useCaseScore
-        }
+    // スコアに基づいてプランを推奨
+    Map<String, dynamic> recommendedPlan;
+    if (totalScore <= 4) {
+      recommendedPlan = {
+        'name': 'ミニフィットプラン+',
+        'price': '3,278',
+        'data': '~3GB',
+        'features': ['データくりこし', '5G対応'],
       };
-    });
-
-    // 最適なプランを決定（スコアが最も高いプラン）
-    String recommendedPlanId =
-        scores.entries.reduce((a, b) => a.value > b.value ? a : b).key;
-
-    // 代替プランの提案（スコアが推奨プランの80%以上の場合）
-    List<Map<String, dynamic>> alternativePlans = [];
-    final recommendedScore = scores[recommendedPlanId]!;
-    scores.forEach((planId, score) {
-      if (planId != recommendedPlanId && score >= recommendedScore * 0.8) {
-        alternativePlans.add({
-          'plan': plans[planId],
-          'score': score,
-          'analysis': analysis[planId]
-        });
-      }
-    });
-
-    // ユーザープロファイルの分析
-    Map<String, dynamic> userProfile = {
-      'usage_pattern': {
-        'data': dataUsage,
-        'call': callUsage,
-        'budget': budget,
-        'primary_use_cases': useCases.take(2).toList()
-      },
-      'needs_analysis': {
-        'data_priority': dataUsage == '多い' || dataUsage == '非常に多い',
-        'call_priority': callUsage == '多い' || callUsage == '非常に多い',
-        'budget_sensitive': budget == '安い' || budget == '普通',
-        'feature_focused': useCases.length > 2
-      }
-    };
+    } else if (totalScore <= 8) {
+      recommendedPlan = {
+        'name': 'メリハリ無制限+',
+        'price': '7,238',
+        'data': '無制限',
+        'features': ['YouTube Premium 6ヶ月無料', 'テザリング'],
+      };
+    } else {
+      recommendedPlan = {
+        'name': 'ペイトク無制限',
+        'price': '9,625',
+        'data': '無制限',
+        'features': ['PayPayポイント高還元', '5G対応'],
+      };
+    }
 
     return {
-      'recommended_plan': plans[recommendedPlanId],
-      'alternative_plans': alternativePlans,
-      'analysis': analysis[recommendedPlanId],
-      'user_profile': userProfile,
-      'score_breakdown': analysis[recommendedPlanId]?['score_breakdown'],
+      'recommended_plan': recommendedPlan,
+      'analysis': {
+        'strengths': ['コストパフォーマンスが高い', 'データ容量が十分'],
+        'weaknesses': ['通話料が高い可能性がある'],
+        'suitable_for': ['データ利用が多い方', '動画視聴が多い方'],
+      },
+      'score_breakdown': {
+        'データ使用量': dataScore,
+        '通話時間': callScore,
+        'オプション利用': optionScore,
+        '割引適用': discountScore,
+      },
       'comparison': {
-        'recommended_plan_score': scores[recommendedPlanId],
-        'average_score': scores.values.reduce((a, b) => a + b) / scores.length,
-        'score_difference': scores[recommendedPlanId]! -
-            (scores.values.reduce((a, b) => a + b) -
-                    scores[recommendedPlanId]!) /
-                (scores.length - 1)
-      }
+        'current_plan_score': 5,
+        'recommended_plan_score': totalScore,
+      },
+      'alternative_plans': [
+        {
+          'plan': {
+            'name': 'スマホデビュープラン+',
+            'price': '2,266',
+            'data': '4GB',
+            'features': ['国内通話かけ放題(1回5分以内)'],
+          },
+          'score': 3,
+        }
+      ]
     };
   }
 }

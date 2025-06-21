@@ -53,5 +53,16 @@
 	<true/>
 	<key>UIFileSharingEnabled</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.614912381441-si0f13esg8jhr5bg2gtonvo5r4pco0ij</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

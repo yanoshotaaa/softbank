@@ -21,7 +21,7 @@ class CommonHeader extends StatelessWidget {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -152,8 +152,8 @@ class CommonHeader extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: unlocked
-                  ? const Color(0xFF2C3E50).withOpacity(0.1)
-                  : Colors.grey.withOpacity(0.1),
+                  ? const Color(0xFF2C3E50).withValues(alpha: 0.1)
+                  : Colors.grey.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -207,10 +207,10 @@ class CommonHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
       decoration: BoxDecoration(
-        color: isNew ? const Color(0xFF8B5CF6).withOpacity(0.05) : null,
+        color: isNew ? const Color(0xFF8B5CF6).withValues(alpha: 0.05) : null,
         border: Border(
           bottom: BorderSide(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withValues(alpha: 0.2),
             width: 1,
           ),
         ),
@@ -221,7 +221,7 @@ class CommonHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -247,7 +247,7 @@ class CommonHeader extends StatelessWidget {
                   message,
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.black.withOpacity(0.7),
+                    color: Colors.black.withValues(alpha: 0.7),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -255,7 +255,7 @@ class CommonHeader extends StatelessWidget {
                   time,
                   style: TextStyle(
                     fontSize: 11,
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.black.withValues(alpha: 0.5),
                   ),
                 ),
               ],
@@ -291,7 +291,7 @@ class CommonHeader extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -317,7 +317,7 @@ class CommonHeader extends StatelessWidget {
                     description,
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.black.withOpacity(0.6),
+                      color: Colors.black.withValues(alpha: 0.6),
                     ),
                   ),
                 ],

@@ -19,14 +19,6 @@ class HomeScreen extends StatefulWidget {
 class HomeScreenState extends State<HomeScreen> {
   int selectedIndex = 0;
 
-  void _showHistoryScreen() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const HistoryScreen(),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,13 +27,9 @@ class HomeScreenState extends State<HomeScreen> {
         children: [
           HomeContent(
             onTabSelected: (index) {
-              if (index == 1) {
-                _showHistoryScreen();
-              } else {
-                setState(() {
-                  selectedIndex = index;
-                });
-              }
+              setState(() {
+                selectedIndex = index;
+              });
             },
           ),
           const PokerAnalysisScreen(),
@@ -153,8 +141,8 @@ class _HomeContentState extends State<_HomeContent>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                const Color(0xFFA18CD1).withOpacity(0.95),
-                const Color(0xFFFBC2EB).withOpacity(0.95),
+                const Color(0xFFA18CD1).withValues(alpha: 0.95),
+                const Color(0xFFFBC2EB).withValues(alpha: 0.95),
               ],
               stops: const [0.0, 1.0],
             ),
@@ -175,17 +163,17 @@ class _HomeContentState extends State<_HomeContent>
                     margin: const EdgeInsets.fromLTRB(18, 20, 18, 0),
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.95),
+                      color: Colors.white.withValues(alpha: 0.95),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.purple.withOpacity(0.1),
+                          color: Colors.purple.withValues(alpha: 0.1),
                           blurRadius: 20,
                           offset: const Offset(0, 8),
                           spreadRadius: 2,
                         ),
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -204,8 +192,8 @@ class _HomeContentState extends State<_HomeContent>
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.purple.withOpacity(
-                                            0.3 * _animation.value),
+                                        color: Colors.purple.withValues(
+                                            alpha: 0.3 * _animation.value),
                                         blurRadius: 24 * _animation.value,
                                         spreadRadius: 2,
                                       ),
@@ -224,8 +212,10 @@ class _HomeContentState extends State<_HomeContent>
                                           shape: BoxShape.circle,
                                           gradient: LinearGradient(
                                             colors: [
-                                              Colors.purple.withOpacity(0.8),
-                                              Colors.purple.withOpacity(0.6),
+                                              Colors.purple
+                                                  .withValues(alpha: 0.8),
+                                              Colors.purple
+                                                  .withValues(alpha: 0.6),
                                             ],
                                           ),
                                         ),
@@ -262,12 +252,13 @@ class _HomeContentState extends State<_HomeContent>
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(
-                                          color: Colors.purple.withOpacity(0.1),
+                                          color: Colors.purple
+                                              .withValues(alpha: 0.1),
                                           borderRadius:
                                               BorderRadius.circular(12),
                                           border: Border.all(
                                               color: Colors.purple
-                                                  .withOpacity(0.3)),
+                                                  .withValues(alpha: 0.3)),
                                         ),
                                         child: const Text(
                                           'VIP',
@@ -287,7 +278,7 @@ class _HomeContentState extends State<_HomeContent>
                                     child: LinearProgressIndicator(
                                       value: 0.7,
                                       backgroundColor:
-                                          Colors.purple.withOpacity(0.1),
+                                          Colors.purple.withValues(alpha: 0.1),
                                       valueColor:
                                           const AlwaysStoppedAnimation<Color>(
                                               Colors.purple),
@@ -298,7 +289,8 @@ class _HomeContentState extends State<_HomeContent>
                                   Text(
                                     '次のレベルまで 300ポイント',
                                     style: TextStyle(
-                                      color: Colors.purple.withOpacity(0.8),
+                                      color:
+                                          Colors.purple.withValues(alpha: 0.8),
                                       fontSize: 12,
                                     ),
                                   ),
@@ -399,7 +391,7 @@ class _HomeContentState extends State<_HomeContent>
                             child: Text(
                               'すべて見る',
                               style: TextStyle(
-                                color: Colors.purple.withOpacity(0.8),
+                                color: Colors.purple.withValues(alpha: 0.8),
                                 fontSize: 14,
                               ),
                             ),
@@ -462,17 +454,17 @@ class _HomeContentState extends State<_HomeContent>
             width: (MediaQuery.of(context).size.width - 48) / 2,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.95),
+              color: Colors.white.withValues(alpha: 0.95),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   blurRadius: 15,
                   offset: const Offset(0, 6),
                   spreadRadius: 1,
                 ),
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -486,8 +478,8 @@ class _HomeContentState extends State<_HomeContent>
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        color.withOpacity(0.2),
-                        color.withOpacity(0.1),
+                        color.withValues(alpha: 0.2),
+                        color.withValues(alpha: 0.1),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(12),
@@ -539,17 +531,18 @@ class _HomeContentState extends State<_HomeContent>
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.95),
+            color: Colors.white.withValues(alpha: 0.95),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: (isWin ? Colors.green : Colors.red).withOpacity(0.1),
+                color:
+                    (isWin ? Colors.green : Colors.red).withValues(alpha: 0.1),
                 blurRadius: 15,
                 offset: const Offset(0, 6),
                 spreadRadius: 1,
               ),
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -562,8 +555,10 @@ class _HomeContentState extends State<_HomeContent>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      (isWin ? Colors.green : Colors.red).withOpacity(0.2),
-                      (isWin ? Colors.green : Colors.red).withOpacity(0.1),
+                      (isWin ? Colors.green : Colors.red)
+                          .withValues(alpha: 0.2),
+                      (isWin ? Colors.green : Colors.red)
+                          .withValues(alpha: 0.1),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(12),
@@ -590,7 +585,7 @@ class _HomeContentState extends State<_HomeContent>
                               horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: (isWin ? Colors.green : Colors.red)
-                                .withOpacity(0.1),
+                                .withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -617,7 +612,7 @@ class _HomeContentState extends State<_HomeContent>
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
                         value: compliance,
-                        backgroundColor: Colors.purple.withOpacity(0.1),
+                        backgroundColor: Colors.purple.withValues(alpha: 0.1),
                         valueColor:
                             const AlwaysStoppedAnimation<Color>(Colors.purple),
                         minHeight: 4,
@@ -627,7 +622,7 @@ class _HomeContentState extends State<_HomeContent>
                     Text(
                       'GTO準拠度 ${(compliance * 100).toInt()}%',
                       style: TextStyle(
-                        color: Colors.purple.withOpacity(0.8),
+                        color: Colors.purple.withValues(alpha: 0.8),
                         fontSize: 12,
                       ),
                     ),
@@ -665,13 +660,13 @@ class _InfoCard extends StatelessWidget {
         boxShadow: [
           if (glow)
             BoxShadow(
-              color: iconColor.withOpacity(0.18),
+              color: iconColor.withValues(alpha: 0.18),
               blurRadius: 18,
               spreadRadius: 2,
               offset: const Offset(0, 6),
             ),
           BoxShadow(
-            color: Colors.purple.withOpacity(0.08),
+            color: Colors.purple.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -724,13 +719,13 @@ class _ActionCard extends StatelessWidget {
         boxShadow: [
           if (glow)
             BoxShadow(
-              color: iconColor.withOpacity(0.15),
+              color: iconColor.withValues(alpha: 0.15),
               blurRadius: 18,
               spreadRadius: 2,
               offset: const Offset(0, 6),
             ),
           BoxShadow(
-            color: Colors.purple.withOpacity(0.08),
+            color: Colors.purple.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -739,7 +734,7 @@ class _ActionCard extends StatelessWidget {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: iconColor.withOpacity(0.1),
+            backgroundColor: iconColor.withValues(alpha: 0.1),
             child: Icon(icon, color: iconColor),
           ),
           const SizedBox(width: 16),
@@ -759,7 +754,8 @@ class _ActionCard extends StatelessWidget {
           if (buttonText != null && onPressed != null)
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: buttonColor ?? Colors.purple.withOpacity(0.1),
+                backgroundColor:
+                    buttonColor ?? Colors.purple.withValues(alpha: 0.1),
                 foregroundColor: buttonTextColor ?? Colors.purple,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),

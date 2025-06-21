@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../widgets/common_header.dart';
 import 'plan_diagnosis_screen.dart';
 import 'store_reservation_screen.dart';
+import 'history_screen.dart';
 
 class HomeContent extends StatefulWidget {
   final Function(int)? onTabSelected;
@@ -75,7 +76,7 @@ class _HomeContentState extends State<HomeContent>
               colors: [
                 _backgroundColor,
                 Colors.white,
-                _backgroundColor.withOpacity(0.8),
+                _backgroundColor.withValues(alpha: 0.8),
               ],
               stops: const [0.0, 0.5, 1.0],
             ),
@@ -97,7 +98,7 @@ class _HomeContentState extends State<HomeContent>
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        _primaryColor.withOpacity(0.05),
+                        _primaryColor.withValues(alpha: 0.05),
                         Colors.transparent,
                       ],
                     ),
@@ -138,18 +139,17 @@ class _HomeContentState extends State<HomeContent>
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(28),
                     boxShadow: [
                       BoxShadow(
-                        color: _primaryColor.withOpacity(0.1),
-                        blurRadius: 20,
+                        color: _primaryColor.withValues(alpha: 0.10),
+                        blurRadius: 24,
                         offset: const Offset(0, 8),
                       ),
                     ],
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.8),
-                      width: 2,
-                    ),
+                        color: _primaryColor.withValues(alpha: 0.15),
+                        width: 1.5),
                   ),
                   child: Column(
                     children: [
@@ -162,21 +162,21 @@ class _HomeContentState extends State<HomeContent>
                               shape: BoxShape.circle,
                               gradient: LinearGradient(
                                 colors: [
-                                  _primaryColor.withOpacity(0.8),
-                                  _secondaryColor.withOpacity(0.8),
+                                  _primaryColor.withValues(alpha: 0.8),
+                                  _secondaryColor.withValues(alpha: 0.8),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: _primaryColor.withOpacity(0.2),
+                                  color: _primaryColor.withValues(alpha: 0.2),
                                   blurRadius: 12,
                                   offset: const Offset(0, 4),
                                 ),
                               ],
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.8),
                                 width: 2,
                               ),
                             ),
@@ -222,10 +222,12 @@ class _HomeContentState extends State<HomeContent>
                                         vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: _primaryColor.withOpacity(0.1),
+                                        color: _primaryColor.withValues(
+                                            alpha: 0.1),
                                         borderRadius: BorderRadius.circular(20),
                                         border: Border.all(
-                                          color: _primaryColor.withOpacity(0.2),
+                                          color: _primaryColor.withValues(
+                                              alpha: 0.2),
                                           width: 1,
                                         ),
                                       ),
@@ -251,7 +253,7 @@ class _HomeContentState extends State<HomeContent>
                         borderRadius: BorderRadius.circular(8),
                         child: LinearProgressIndicator(
                           value: 0.65,
-                          backgroundColor: _primaryColor.withOpacity(0.1),
+                          backgroundColor: _primaryColor.withValues(alpha: 0.1),
                           valueColor: const AlwaysStoppedAnimation<Color>(
                               _primaryColor),
                           minHeight: 8,
@@ -322,7 +324,28 @@ class _HomeContentState extends State<HomeContent>
                             color: _primaryColor,
                             onTap: () {
                               HapticFeedback.mediumImpact();
-                              widget.onTabSelected?.call(1);
+                              Navigator.of(context).push(
+                                PageRouteBuilder(
+                                  pageBuilder: (context, animation,
+                                          secondaryAnimation) =>
+                                      const HistoryScreen(),
+                                  transitionsBuilder: (context, animation,
+                                      secondaryAnimation, child) {
+                                    const begin = Offset(1.0, 0.0);
+                                    const end = Offset.zero;
+                                    const curve = Curves.easeInOut;
+                                    var tween = Tween(begin: begin, end: end)
+                                        .chain(CurveTween(curve: curve));
+                                    var offsetAnimation =
+                                        animation.drive(tween);
+                                    return SlideTransition(
+                                        position: offsetAnimation,
+                                        child: child);
+                                  },
+                                  maintainState: true,
+                                  fullscreenDialog: false,
+                                ),
+                              );
                             },
                           ),
                           _buildQuickActionCard(
@@ -377,22 +400,22 @@ class _HomeContentState extends State<HomeContent>
                         },
                         child: Container(
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
+                            gradient: const LinearGradient(
+                              colors: [_primaryColor, _secondaryColor],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
-                              colors: [
-                                _primaryColor.withOpacity(0.8),
-                                _primaryColor.withOpacity(0.6),
-                              ],
                             ),
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: _primaryColor.withOpacity(0.3),
-                                blurRadius: 15,
-                                offset: const Offset(0, 5),
+                                color: _primaryColor.withValues(alpha: 0.08),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
                               ),
                             ],
+                            border: Border.all(
+                                color: _primaryColor.withValues(alpha: 0.15),
+                                width: 1.5),
                           ),
                           child: Material(
                             color: Colors.transparent,
@@ -434,7 +457,8 @@ class _HomeContentState extends State<HomeContent>
                                       height: 100,
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: Colors.white.withOpacity(0.1),
+                                        color:
+                                            Colors.white.withValues(alpha: 0.1),
                                       ),
                                     ),
                                   ),
@@ -446,7 +470,8 @@ class _HomeContentState extends State<HomeContent>
                                       height: 60,
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: Colors.white.withOpacity(0.1),
+                                        color:
+                                            Colors.white.withValues(alpha: 0.1),
                                       ),
                                     ),
                                   ),
@@ -458,8 +483,8 @@ class _HomeContentState extends State<HomeContent>
                                         Container(
                                           padding: const EdgeInsets.all(16),
                                           decoration: BoxDecoration(
-                                            color:
-                                                Colors.white.withOpacity(0.2),
+                                            color: Colors.white
+                                                .withValues(alpha: 0.2),
                                             borderRadius:
                                                 BorderRadius.circular(16),
                                           ),
@@ -490,7 +515,7 @@ class _HomeContentState extends State<HomeContent>
                                                 '現在の利用状況から最適なプランを提案',
                                                 style: TextStyle(
                                                   color: Colors.white
-                                                      .withOpacity(0.9),
+                                                      .withValues(alpha: 0.9),
                                                   fontSize: 14,
                                                   fontFamily: 'Noto Sans JP',
                                                 ),
@@ -504,7 +529,7 @@ class _HomeContentState extends State<HomeContent>
                                                 ),
                                                 decoration: BoxDecoration(
                                                   color: Colors.white
-                                                      .withOpacity(0.2),
+                                                      .withValues(alpha: 0.2),
                                                   borderRadius:
                                                       BorderRadius.circular(20),
                                                 ),
@@ -569,7 +594,7 @@ class _HomeContentState extends State<HomeContent>
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: _secondaryColor.withOpacity(0.1),
+                              color: _secondaryColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Row(
@@ -608,18 +633,17 @@ class _HomeContentState extends State<HomeContent>
                         child: Container(
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: _textPrimaryColor.withOpacity(0.05),
-                                blurRadius: 15,
-                                offset: const Offset(0, 5),
+                                color: _primaryColor.withValues(alpha: 0.08),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                             border: Border.all(
-                              color: _textPrimaryColor.withOpacity(0.1),
-                              width: 1,
-                            ),
+                                color: _primaryColor.withValues(alpha: 0.15),
+                                width: 1),
                           ),
                           child: Material(
                             color: Colors.transparent,
@@ -662,8 +686,8 @@ class _HomeContentState extends State<HomeContent>
                                         Container(
                                           padding: const EdgeInsets.all(16),
                                           decoration: BoxDecoration(
-                                            color: _secondaryColor
-                                                .withOpacity(0.1),
+                                            color: _secondaryColor.withValues(
+                                                alpha: 0.1),
                                             borderRadius:
                                                 BorderRadius.circular(16),
                                           ),
@@ -707,8 +731,8 @@ class _HomeContentState extends State<HomeContent>
                                     Container(
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
-                                        color:
-                                            _textPrimaryColor.withOpacity(0.03),
+                                        color: _textPrimaryColor.withValues(
+                                            alpha: 0.03),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Column(
@@ -756,8 +780,8 @@ class _HomeContentState extends State<HomeContent>
                                               vertical: 12,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: _secondaryColor
-                                                  .withOpacity(0.1),
+                                              color: _secondaryColor.withValues(
+                                                  alpha: 0.1),
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                             ),
@@ -866,7 +890,7 @@ class _HomeContentState extends State<HomeContent>
                   curve: Curves.easeInOut,
                 );
               },
-              backgroundColor: Colors.purple.withOpacity(0.9),
+              backgroundColor: Colors.purple.withValues(alpha: 0.9),
               child: const Icon(Icons.arrow_upward, color: Colors.white),
             ),
           ),
@@ -883,10 +907,10 @@ class _HomeContentState extends State<HomeContent>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: color.withOpacity(0.2),
+          color: color.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -934,15 +958,15 @@ class _HomeContentState extends State<HomeContent>
           width: (MediaQuery.of(context).size.width - 48) / 2,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.95),
+            color: Colors.white.withValues(alpha: 0.95),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: _primaryColor.withOpacity(0.08),
+                color: color.withValues(alpha: 0.08),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -954,16 +978,16 @@ class _HomeContentState extends State<HomeContent>
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _primaryColor.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: _primaryColor.withOpacity(0.2),
+                    color: color.withValues(alpha: 0.2),
                     width: 1,
                   ),
                 ),
                 child: Icon(
                   icon,
-                  color: _primaryColor,
+                  color: color,
                   size: 24,
                 ),
               ),
@@ -982,7 +1006,7 @@ class _HomeContentState extends State<HomeContent>
               Text(
                 subtitle,
                 style: TextStyle(
-                  color: _textSecondaryColor.withOpacity(0.9),
+                  color: _textSecondaryColor.withValues(alpha: 0.9),
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                   fontFamily: 'Noto Sans JP',
@@ -1013,13 +1037,13 @@ class _HomeContentState extends State<HomeContent>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: _primaryColor.withOpacity(0.08),
+            color: _primaryColor.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
         ],
         border: Border.all(
-          color: Colors.white.withOpacity(0.8),
+          color: Colors.white.withValues(alpha: 0.8),
           width: 1.5,
         ),
       ),
@@ -1029,13 +1053,13 @@ class _HomeContentState extends State<HomeContent>
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: isWin
-                  ? _successColor.withOpacity(0.1)
-                  : _errorColor.withOpacity(0.1),
+                  ? _successColor.withValues(alpha: 0.1)
+                  : _errorColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isWin
-                    ? _successColor.withOpacity(0.2)
-                    : _errorColor.withOpacity(0.2),
+                    ? _successColor.withValues(alpha: 0.2)
+                    : _errorColor.withValues(alpha: 0.2),
                 width: 1,
               ),
             ),
@@ -1079,13 +1103,13 @@ class _HomeContentState extends State<HomeContent>
             ),
             decoration: BoxDecoration(
               color: isWin
-                  ? _successColor.withOpacity(0.1)
-                  : _errorColor.withOpacity(0.1),
+                  ? _successColor.withValues(alpha: 0.1)
+                  : _errorColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: isWin
-                    ? _successColor.withOpacity(0.2)
-                    : _errorColor.withOpacity(0.2),
+                    ? _successColor.withValues(alpha: 0.2)
+                    : _errorColor.withValues(alpha: 0.2),
                 width: 1,
               ),
             ),
@@ -1111,7 +1135,7 @@ class _HomeContentState extends State<HomeContent>
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: _textPrimaryColor.withOpacity(0.1),
+          color: _textPrimaryColor.withValues(alpha: 0.1),
           width: 1,
         ),
       ),

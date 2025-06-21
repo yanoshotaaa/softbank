@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../widgets/common_header.dart';
 import '../home_screen.dart';
 import '../models/analysis_history.dart';
+import 'history_detail_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({Key? key}) : super(key: key);
@@ -14,7 +15,7 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   // カラーパレットの定義
   static const _primaryColor = Color(0xFF2C3E50); // メインカラー（ダークグレー）
   static const _secondaryColor = Color(0xFF34495E); // アクセントカラー（ライトグレー）
@@ -32,7 +33,15 @@ class _HistoryScreenState extends State<HistoryScreen>
   late final Animation<double> _scaleAnimation;
 
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
   bool _showScrollToTop = false;
+  bool _showFilters = false;
+  bool _showStatistics = false;
+
+  // フィルター用のドロップダウン値
+  String _selectedResult = '';
+  String _selectedPosition = '';
+  String _selectedAction = '';
 
   @override
   void initState() {
@@ -57,10 +66,12 @@ class _HistoryScreenState extends State<HistoryScreen>
     );
 
     _scrollController.addListener(_onScroll);
+    _searchController.addListener(_onSearchChanged);
+
+    // 履歴データを読み込む
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _animationController.forward();
-        // 履歴データを読み込む
         context.read<AnalysisHistoryProvider>().loadHistories();
       }
     });
@@ -72,6 +83,12 @@ class _HistoryScreenState extends State<HistoryScreen>
     } else if (_scrollController.offset <= 200 && _showScrollToTop) {
       setState(() => _showScrollToTop = false);
     }
+  }
+
+  void _onSearchChanged() {
+    context
+        .read<AnalysisHistoryProvider>()
+        .setSearchQuery(_searchController.text);
   }
 
   void _handleNavigation(int index) {
@@ -104,14 +121,344 @@ class _HistoryScreenState extends State<HistoryScreen>
   void dispose() {
     _animationController.dispose();
     _scrollController.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: _primaryColor.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'ハンド、結果、ポジションで検索...',
+          prefixIcon: const Icon(Icons.search, color: _textSecondaryColor),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear, color: _textSecondaryColor),
+                  onPressed: () {
+                    _searchController.clear();
+                  },
+                )
+              : null,
+          border: InputBorder.none,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterSection() {
+    if (!_showFilters) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: _primaryColor.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'フィルター',
+                style: TextStyle(
+                  fontFamily: 'Noto Sans JP',
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: _textPrimaryColor,
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  context.read<AnalysisHistoryProvider>().resetFilters();
+                  setState(() {
+                    _selectedResult = '';
+                    _selectedPosition = '';
+                    _selectedAction = '';
+                  });
+                },
+                child: const Text('リセット'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // 結果とポジションのフィルター
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _selectedResult.isEmpty ? null : _selectedResult,
+                  decoration: const InputDecoration(
+                    labelText: '結果',
+                    border: OutlineInputBorder(),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                  ),
+                  isExpanded: true,
+                  items: const [
+                    DropdownMenuItem(value: '', child: Text('すべて')),
+                    DropdownMenuItem(value: '適切なプレイ', child: Text('適切なプレイ')),
+                    DropdownMenuItem(value: '境界線のプレイ', child: Text('境界線のプレイ')),
+                    DropdownMenuItem(value: '改善の余地あり', child: Text('改善の余地あり')),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedResult = value ?? '';
+                    });
+                    context.read<AnalysisHistoryProvider>().setFilters(
+                          result: value?.isEmpty == true ? null : value,
+                        );
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _selectedPosition.isEmpty ? null : _selectedPosition,
+                  decoration: const InputDecoration(
+                    labelText: 'ポジション',
+                    border: OutlineInputBorder(),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                  ),
+                  isExpanded: true,
+                  items: const [
+                    DropdownMenuItem(value: '', child: Text('すべて')),
+                    DropdownMenuItem(value: 'BTN', child: Text('BTN')),
+                    DropdownMenuItem(value: 'CO', child: Text('CO')),
+                    DropdownMenuItem(value: 'MP', child: Text('MP')),
+                    DropdownMenuItem(value: 'UTG', child: Text('UTG')),
+                    DropdownMenuItem(value: 'BB', child: Text('BB')),
+                    DropdownMenuItem(value: 'SB', child: Text('SB')),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedPosition = value ?? '';
+                    });
+                    context.read<AnalysisHistoryProvider>().setFilters(
+                          position: value?.isEmpty == true ? null : value,
+                        );
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // アクションフィルター（全幅）
+          DropdownButtonFormField<String>(
+            value: _selectedAction.isEmpty ? null : _selectedAction,
+            decoration: const InputDecoration(
+              labelText: 'アクション',
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+            ),
+            isExpanded: true,
+            items: const [
+              DropdownMenuItem(value: '', child: Text('すべて')),
+              DropdownMenuItem(value: 'fold', child: Text('fold')),
+              DropdownMenuItem(value: 'call', child: Text('call')),
+              DropdownMenuItem(value: 'raise', child: Text('raise')),
+              DropdownMenuItem(value: '3bet', child: Text('3bet')),
+              DropdownMenuItem(value: '4bet', child: Text('4bet')),
+            ],
+            onChanged: (value) {
+              setState(() {
+                _selectedAction = value ?? '';
+              });
+              context.read<AnalysisHistoryProvider>().setFilters(
+                    action: value?.isEmpty == true ? null : value,
+                  );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatisticsSection() {
+    if (!_showStatistics) return const SizedBox.shrink();
+
+    return Consumer<AnalysisHistoryProvider>(
+      builder: (context, provider, child) {
+        final stats = provider.statistics;
+
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: _primaryColor.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '統計情報',
+                style: TextStyle(
+                  fontFamily: 'Noto Sans JP',
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: _textPrimaryColor,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatCard(
+                      '総分析数',
+                      '${stats['total']}',
+                      Icons.analytics,
+                      _primaryColor,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildStatCard(
+                      '平均勝率',
+                      '${(stats['averageWinRate'] * 100).toStringAsFixed(1)}%',
+                      Icons.trending_up,
+                      _successColor,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatCard(
+                      '適切なプレイ',
+                      '${stats['appropriatePlays']}',
+                      Icons.check_circle,
+                      _successColor,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildStatCard(
+                      '境界線のプレイ',
+                      '${stats['borderlinePlays']}',
+                      Icons.help_outline,
+                      _warningColor,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatCard(
+                      '改善必要',
+                      '${stats['improvementNeeded']}',
+                      Icons.warning,
+                      _errorColor,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildStatCard(
+                      '最高勝率',
+                      '${(stats['bestWinRate'] * 100).toStringAsFixed(1)}%',
+                      Icons.star,
+                      _successColor,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStatCard(
+      String title, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontFamily: 'Noto Sans JP',
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          Text(
+            title,
+            style: TextStyle(
+              fontFamily: 'Noto Sans JP',
+              fontSize: 10,
+              color: _textSecondaryColor,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildHistoryCard(AnalysisHistory history) {
     final dateFormat = DateFormat('yyyy/MM/dd HH:mm');
     final winRateColor = history.winRate >= 0.5 ? _successColor : _warningColor;
-    final resultColor =
-        history.analysisResult == '適切なプレイ' ? _successColor : _warningColor;
+
+    // 分析結果に基づく色の決定
+    Color resultColor;
+    switch (history.analysisResult) {
+      case '適切なプレイ':
+        resultColor = _successColor;
+        break;
+      case '境界線のプレイ':
+        resultColor = _warningColor;
+        break;
+      case '改善の余地あり':
+        resultColor = _errorColor;
+        break;
+      default:
+        resultColor = _textSecondaryColor;
+    }
 
     return Dismissible(
       // スワイプで削除可能に
@@ -174,9 +521,11 @@ class _HistoryScreenState extends State<HistoryScreen>
               child: InkWell(
                 // タップで詳細表示
                 onTap: () {
-                  // TODO: 詳細画面への遷移を実装
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('詳細表示は今後実装予定です')),
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          HistoryDetailScreen(history: history),
+                    ),
                   );
                 },
                 borderRadius: BorderRadius.circular(16),
@@ -311,6 +660,41 @@ class _HistoryScreenState extends State<HistoryScreen>
                           ],
                         ),
                       ),
+                      // タグとメモの表示
+                      if (history.tags.isNotEmpty || history.notes != null) ...[
+                        const SizedBox(height: 12),
+                        if (history.tags.isNotEmpty)
+                          Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            children: history.tags
+                                .map((tag) => Chip(
+                                      label: Text(
+                                        tag,
+                                        style: const TextStyle(fontSize: 10),
+                                      ),
+                                      backgroundColor:
+                                          _primaryColor.withOpacity(0.1),
+                                      labelStyle:
+                                          const TextStyle(color: _primaryColor),
+                                    ))
+                                .toList(),
+                          ),
+                        if (history.notes != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            history.notes!,
+                            style: TextStyle(
+                              fontFamily: 'Noto Sans JP',
+                              fontSize: 12,
+                              color: _textSecondaryColor,
+                              fontStyle: FontStyle.italic,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ],
                     ],
                   ),
                 ),
@@ -376,10 +760,67 @@ class _HistoryScreenState extends State<HistoryScreen>
               showBackButton: true,
             ),
           ),
+          // 検索・フィルター・統計ボタン
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 56,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _showFilters = !_showFilters;
+                          if (_showFilters) _showStatistics = false;
+                        });
+                      },
+                      icon: Icon(_showFilters
+                          ? Icons.filter_alt
+                          : Icons.filter_alt_outlined),
+                      label: const Text('フィルター'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            _showFilters ? _primaryColor : Colors.white,
+                        foregroundColor:
+                            _showFilters ? Colors.white : _primaryColor,
+                        elevation: _showFilters ? 4 : 1,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _showStatistics = !_showStatistics;
+                          if (_showStatistics) _showFilters = false;
+                        });
+                      },
+                      icon: Icon(_showStatistics
+                          ? Icons.bar_chart
+                          : Icons.bar_chart_outlined),
+                      label: const Text('統計'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            _showStatistics ? _primaryColor : Colors.white,
+                        foregroundColor:
+                            _showStatistics ? Colors.white : _primaryColor,
+                        elevation: _showStatistics ? 4 : 1,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           // 履歴リスト
           Padding(
             padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 56, // ステータスバー + ヘッダーの高さ
+              top: MediaQuery.of(context).padding.top +
+                  120, // ステータスバー + ヘッダー + ボタン
               bottom: 80,
             ),
             child: Consumer<AnalysisHistoryProvider>(
@@ -390,7 +831,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                   );
                 }
 
-                if (provider.histories.isEmpty) {
+                if (provider.allHistories.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -418,18 +859,96 @@ class _HistoryScreenState extends State<HistoryScreen>
                             color: _textSecondaryColor.withOpacity(0.8),
                           ),
                         ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            // ダミーデータを追加してテスト
+                            final historyProvider =
+                                context.read<AnalysisHistoryProvider>();
+                            final testHistory =
+                                historyProvider.createHistoryFromAnalysis(
+                              handDescription: 'テストハンド AKs vs QQ',
+                              winRate: 0.65,
+                              analysisResult: '適切なプレイ',
+                              handDetails: {
+                                'position': 'BTN',
+                                'stack': '100BB',
+                                'action': '3bet',
+                                'opponent': 'BB',
+                              },
+                              notes: 'テスト用の履歴です',
+                              tags: ['テスト'],
+                            );
+                            historyProvider.addHistory(testHistory);
+                          },
+                          child: const Text('テスト履歴を追加'),
+                        ),
                       ],
                     ),
                   );
                 }
 
-                return ListView.builder(
+                if (provider.histories.isEmpty &&
+                    provider.allHistories.isNotEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.filter_list,
+                          size: 64,
+                          color: _textSecondaryColor.withOpacity(0.5),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'フィルター条件に一致する履歴がありません',
+                          style: TextStyle(
+                            fontFamily: 'Noto Sans JP',
+                            fontSize: 16,
+                            color: _textSecondaryColor,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '検索条件やフィルターを変更してください',
+                          style: TextStyle(
+                            fontFamily: 'Noto Sans JP',
+                            fontSize: 14,
+                            color: _textSecondaryColor.withOpacity(0.8),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            context
+                                .read<AnalysisHistoryProvider>()
+                                .resetFilters();
+                            setState(() {
+                              _selectedResult = '';
+                              _selectedPosition = '';
+                              _selectedAction = '';
+                              _searchController.clear();
+                            });
+                          },
+                          child: const Text('フィルターをリセット'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return ListView(
+                  key: const PageStorageKey('history_list'),
                   controller: _scrollController,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: provider.histories.length,
-                  itemBuilder: (context, index) {
-                    return _buildHistoryCard(provider.histories[index]);
-                  },
+                  children: [
+                    _buildSearchBar(),
+                    _buildFilterSection(),
+                    _buildStatisticsSection(),
+                    ...provider.histories
+                        .map((history) => _buildHistoryCard(history))
+                        .toList(),
+                  ],
                 );
               },
             ),

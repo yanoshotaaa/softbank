@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 import '../widgets/common_header.dart';
+import '../providers/profile_provider.dart';
 import 'settings/account_settings_screen.dart';
 
 class AccountScreen extends StatefulWidget {
@@ -112,129 +115,145 @@ class _ProfileSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: () {
-            HapticFeedback.lightImpact();
-            // プロフィール画像編集
-          },
-          child: Stack(
-            alignment: Alignment.bottomRight,
-            children: [
-              AnimatedBuilder(
-                animation: animation,
-                builder: (context, child) {
-                  return Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF2C3E50)
-                              .withOpacity(0.3 * animation.value),
-                          blurRadius: 16 * animation.value,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: const Center(
-                      child: Text('🎯', style: TextStyle(fontSize: 48)),
-                    ),
-                  );
-                },
-              ),
-              Positioned(
-                bottom: 6,
-                right: 6,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.10),
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(Icons.edit,
-                      color: Color(0xFF2C3E50), size: 22),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+    return Consumer<ProfileProvider>(
+      builder: (context, profileProvider, child) {
+        final profile = profileProvider.profile;
+        final username = profile?.username ?? 'SHOOTER';
+        final avatar = profile?.avatar ?? '🎯';
+
+        return Column(
           children: [
-            const Text(
-              'SHOOTER',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 26,
-                letterSpacing: 1.2,
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AccountSettingsScreen(),
+                  ),
+                );
+              },
+              child: Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  AnimatedBuilder(
+                    animation: animation,
+                    builder: (context, child) {
+                      return Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF2C3E50)
+                                  .withOpacity(0.3 * animation.value),
+                              blurRadius: 16 * animation.value,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(avatar,
+                              style: const TextStyle(fontSize: 48)),
+                        ),
+                      );
+                    },
+                  ),
+                  Positioned(
+                    bottom: 6,
+                    right: 6,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.10),
+                            blurRadius: 4,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.edit,
+                          color: Color(0xFF2C3E50), size: 22),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.18),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Text(
-                'PREMIUM',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  letterSpacing: 1.1,
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  username,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 26,
+                    letterSpacing: 1.2,
+                  ),
                 ),
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.18),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Text(
+                    'PREMIUM',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      letterSpacing: 1.1,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'sample@softbank.jp',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 14),
+            // レベル進捗バー
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 48.0),
+              child: Column(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: LinearProgressIndicator(
+                      value: 0.65,
+                      backgroundColor: Colors.white.withOpacity(0.18),
+                      valueColor:
+                          const AlwaysStoppedAnimation<Color>(Colors.white),
+                      minHeight: 8,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'レベル 12   あと320ptで次のランク',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          'sample@softbank.jp',
-          style: TextStyle(
-            color: Colors.white70,
-            fontSize: 14,
-          ),
-        ),
-        const SizedBox(height: 14),
-        // レベル進捗バー
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 48.0),
-          child: Column(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: LinearProgressIndicator(
-                  value: 0.65,
-                  backgroundColor: Colors.white.withOpacity(0.18),
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                  minHeight: 8,
-                ),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'レベル 12   あと320ptで次のランク',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 }
@@ -455,9 +474,22 @@ class _AccountActionsSection extends StatelessWidget {
                     child: const Text('キャンセル'),
                   ),
                   TextButton(
-                    onPressed: () {
+                    onPressed: () async {
                       Navigator.pop(context);
                       // ログアウト処理
+                      try {
+                        await FirebaseAuth.instance.signOut();
+                      } catch (e) {
+                        // エラーハンドリング
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('ログアウト中にエラーが発生しました: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
                     },
                     child: const Text(
                       'ログアウト',

@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "614912381441",
+    "project_id": "softbank-d5d1b",
+    "storage_bucket": "softbank-d5d1b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:614912381441:android:3899c4989e9433901ca600",
+        "android_client_info": {
+          "package_name": "com.example.poker_analyzer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "614912381441-4skddsj2uqjhaj2cu6caquf1j1jgfiij.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDk4Dck92G18YUDWnkEjZBxU8NswSikUFo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "614912381441-4skddsj2uqjhaj2cu6caquf1j1jgfiij.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "614912381441-si0f13esg8jhr5bg2gtonvo5r4pco0ij.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.pokerAnalyzer"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

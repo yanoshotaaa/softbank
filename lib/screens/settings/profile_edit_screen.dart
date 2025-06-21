@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import '../../widgets/common_header.dart';
+import '../../providers/profile_provider.dart';
 
 class ProfileEditScreen extends StatefulWidget {
   const ProfileEditScreen({Key? key}) : super(key: key);
@@ -11,9 +13,74 @@ class ProfileEditScreen extends StatefulWidget {
 
 class _ProfileEditScreenState extends State<ProfileEditScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController(text: 'SHOOTER');
-  final _emailController = TextEditingController(text: 'sample@softbank.jp');
+  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
   String _selectedAvatar = '🎮';
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  void _loadProfile() {
+    final profileProvider = context.read<ProfileProvider>();
+    final profile = profileProvider.profile;
+
+    if (profile != null) {
+      _usernameController.text = profile.username;
+      _emailController.text = profile.email;
+      _selectedAvatar = profile.avatar;
+    } else {
+      // デフォルト値
+      _usernameController.text = 'SHOOTER';
+      _emailController.text = 'sample@softbank.jp';
+      _selectedAvatar = '🎮';
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final profileProvider = context.read<ProfileProvider>();
+      await profileProvider.updateProfile(
+        username: _usernameController.text.trim(),
+        email: _emailController.text.trim(),
+        avatar: _selectedAvatar,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('プロフィールを保存しました'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('保存に失敗しました: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -119,12 +186,12 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {
-                            HapticFeedback.mediumImpact();
-                            if (_formKey.currentState!.validate()) {
-                              Navigator.pop(context);
-                            }
-                          },
+                          onPressed: _isLoading
+                              ? null
+                              : () {
+                                  HapticFeedback.mediumImpact();
+                                  _saveProfile();
+                                },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF2C3E50),
                             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -132,13 +199,23 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text(
-                            '保存',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white),
+                                  ),
+                                )
+                              : const Text(
+                                  '保存',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                         ),
                       ),
                     ],

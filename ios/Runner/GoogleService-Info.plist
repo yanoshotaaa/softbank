@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>614912381441-si0f13esg8jhr5bg2gtonvo5r4pco0ij.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.614912381441-si0f13esg8jhr5bg2gtonvo5r4pco0ij</string>
+	<key>API_KEY</key>
+	<string>AIzaSyCvVjFIFjPbpbOGxtS6M_JQbZHF-zFLvjA</string>
+	<key>GCM_SENDER_ID</key>
+	<string>614912381441</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.pokerAnalyzer</string>
+	<key>PROJECT_ID</key>
+	<string>softbank-d5d1b</string>
+	<key>STORAGE_BUCKET</key>
+	<string>softbank-d5d1b.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:614912381441:ios:dd251a7debb7539d1ca600</string>
+</dict>
+</plist>
