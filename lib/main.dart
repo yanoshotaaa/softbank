@@ -71,7 +71,6 @@ class MyApp extends StatelessWidget {
               : theme == 'light'
                   ? ThemeMode.light
                   : ThemeMode.system;
-
           return MaterialApp(
             title: 'SoftBank',
             theme: AppTheme.lightTheme,

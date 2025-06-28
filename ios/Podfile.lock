@@ -1471,7 +1471,7 @@ SPEC CHECKSUMS:
   cloud_firestore: ded01e29d440fa7ba52bc855f27d2fc7a1bcf4be
   DKImagePickerController: 946cec48c7873164274ecc4624d19e3da4c1ef3c
   DKPhotoGallery: b3834fecb755ee09a593d7c9e389d8b5d6deed60
-  file_picker: 15fd9539e4eb735dc54bae8c0534a7a9511a03de
+  file_picker: b159e0c068aef54932bb15dc9fd1571818edaf49
   Firebase: 3435bc66b4d494c2f22c79fd3aae4c1db6662327
   firebase_auth: a9855fe79286576c5225b28aafed65bc374ac19a
   firebase_core: a861be150c0e7c6aecedde077968eb92cbf790b9

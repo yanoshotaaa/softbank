@@ -99,8 +99,19 @@ class MissionProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   MissionProvider() {
+    // コンストラクタでの初期化を削除
+  }
+
+  Future<void> loadMissions() async {
+    _isLoading = true;
+    notifyListeners();
+
+    // このメソッドで初期化と読み込みを行う
     _initializeMissions();
-    _loadProgress();
+    await _loadProgress(); // _loadProgressを待つように変更
+
+    _isLoading = false;
+    notifyListeners();
   }
 
   void _initializeMissions() {

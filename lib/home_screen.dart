@@ -8,6 +8,10 @@ import 'screens/account_screen.dart';
 import 'screens/home_content.dart';
 import 'screens/history_screen.dart';
 import 'widgets/common_header.dart';
+import 'package:provider/provider.dart';
+import 'package:poker_analyzer/providers/profile_provider.dart';
+import 'package:poker_analyzer/providers/analysis_history_provider.dart';
+import 'package:poker_analyzer/providers/mission_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -18,9 +22,59 @@ class HomeScreen extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen> {
   int selectedIndex = 0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (selectedIndex >= 5) {
+      selectedIndex = 0;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeData();
+    });
+  }
+
+  Future<void> _initializeData() async {
+    if (!mounted) return;
+
+    try {
+      final profileProvider =
+          Provider.of<ProfileProvider>(context, listen: false);
+      final historyProvider =
+          Provider.of<AnalysisHistoryProvider>(context, listen: false);
+      final missionProvider =
+          Provider.of<MissionProvider>(context, listen: false);
+
+      await Future.wait([
+        profileProvider.loadProfile(),
+        historyProvider.loadHistories(),
+        missionProvider.loadMissions(),
+      ]);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('データの初期化に失敗しました: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
     return Scaffold(
       body: IndexedStack(
         index: selectedIndex,
@@ -39,7 +93,7 @@ class HomeScreenState extends State<HomeScreen> {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: selectedIndex,
+        currentIndex: selectedIndex >= 5 ? 0 : selectedIndex,
         onTap: (index) {
           setState(() {
             selectedIndex = index;

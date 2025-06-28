@@ -63,6 +63,59 @@ class AnalysisHistory {
     return '${handDescription} ${analysisResult} ${handDetails.values.join(' ')} ${notes ?? ''} ${tags.join(' ')}'
         .toLowerCase();
   }
+
+  // for Firestore
+  factory AnalysisHistory.fromFirestore(DocumentSnapshot doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    return AnalysisHistory(
+      id: doc.id,
+      analyzedAt: (data['analyzedAt'] as Timestamp).toDate(),
+      handDescription: data['handDescription'] ?? '',
+      winRate: (data['winRate'] as num?)?.toDouble() ?? 0.0,
+      analysisResult: data['analysisResult'] ?? 'unknown',
+      handDetails: Map<String, dynamic>.from(data['handDetails'] ?? {}),
+      imagePath: data['imagePath'] as String?,
+      notes: data['notes'] as String?,
+      tags: List<String>.from(data['tags'] ?? []),
+    );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'analyzedAt': Timestamp.fromDate(analyzedAt),
+      'handDescription': handDescription,
+      'winRate': winRate,
+      'analysisResult': analysisResult,
+      'handDetails': handDetails,
+      'imagePath': imagePath,
+      'notes': notes,
+      'tags': tags,
+    };
+  }
+
+  AnalysisHistory copyWith({
+    String? id,
+    DateTime? analyzedAt,
+    String? handDescription,
+    double? winRate,
+    String? analysisResult,
+    Map<String, dynamic>? handDetails,
+    String? imagePath,
+    String? notes,
+    List<String>? tags,
+  }) {
+    return AnalysisHistory(
+      id: id ?? this.id,
+      analyzedAt: analyzedAt ?? this.analyzedAt,
+      handDescription: handDescription ?? this.handDescription,
+      winRate: winRate ?? this.winRate,
+      analysisResult: analysisResult ?? this.analysisResult,
+      handDetails: handDetails ?? this.handDetails,
+      imagePath: imagePath ?? this.imagePath,
+      notes: notes ?? this.notes,
+      tags: tags ?? this.tags,
+    );
+  }
 }
 
 // 分析履歴を管理するプロバイダー（Firebase Firestore使用）
@@ -163,7 +216,7 @@ class AnalysisHistoryProvider extends ChangeNotifier {
           .doc(_currentUserId)
           .collection('histories')
           .doc(history.id)
-          .set(history.toJson());
+          .set(history.toFirestore());
 
       // 新しいリストを作成して代入
       _histories = [history, ..._histories];
@@ -195,7 +248,7 @@ class AnalysisHistoryProvider extends ChangeNotifier {
           .doc(_currentUserId)
           .collection('histories')
           .doc(updatedHistory.id)
-          .update(updatedHistory.toJson());
+          .update(updatedHistory.toFirestore());
 
       // ローカルリストを更新
       final index = _histories.indexWhere((h) => h.id == updatedHistory.id);
@@ -264,7 +317,7 @@ class AnalysisHistoryProvider extends ChangeNotifier {
           .get(const GetOptions(source: Source.serverAndCache));
 
       _histories = querySnapshot.docs
-          .map((doc) => AnalysisHistory.fromJson(doc.data()))
+          .map((doc) => AnalysisHistory.fromFirestore(doc))
           .toList();
 
       _applyFilters();
@@ -284,7 +337,7 @@ class AnalysisHistoryProvider extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       final historiesJson = prefs.getStringList('analysis_histories') ?? [];
-      historiesJson.add(jsonEncode(history.toJson()));
+      historiesJson.add(jsonEncode(history.toFirestore()));
       await prefs.setStringList('analysis_histories', historiesJson);
     } catch (e) {
       debugPrint('ローカル保存エラー: $e');

@@ -318,37 +318,6 @@ class _HomeContentState extends State<HomeContent>
                             },
                           ),
                           _buildQuickActionCard(
-                            icon: Icons.history,
-                            title: '履歴',
-                            subtitle: '過去の分析結果',
-                            color: _primaryColor,
-                            onTap: () {
-                              HapticFeedback.mediumImpact();
-                              Navigator.of(context).push(
-                                PageRouteBuilder(
-                                  pageBuilder: (context, animation,
-                                          secondaryAnimation) =>
-                                      const HistoryScreen(),
-                                  transitionsBuilder: (context, animation,
-                                      secondaryAnimation, child) {
-                                    const begin = Offset(1.0, 0.0);
-                                    const end = Offset.zero;
-                                    const curve = Curves.easeInOut;
-                                    var tween = Tween(begin: begin, end: end)
-                                        .chain(CurveTween(curve: curve));
-                                    var offsetAnimation =
-                                        animation.drive(tween);
-                                    return SlideTransition(
-                                        position: offsetAnimation,
-                                        child: child);
-                                  },
-                                  maintainState: true,
-                                  fullscreenDialog: false,
-                                ),
-                              );
-                            },
-                          ),
-                          _buildQuickActionCard(
                             icon: Icons.emoji_events,
                             title: 'ランキング',
                             subtitle: '週間ランキング',
@@ -366,6 +335,20 @@ class _HomeContentState extends State<HomeContent>
                             onTap: () {
                               HapticFeedback.mediumImpact();
                               widget.onTabSelected?.call(3);
+                            },
+                          ),
+                          _buildQuickActionCard(
+                            icon: Icons.history,
+                            title: '履歴',
+                            subtitle: '過去の分析結果',
+                            color: _primaryColor,
+                            onTap: () {
+                              HapticFeedback.mediumImpact();
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const HistoryScreen(),
+                                ),
+                              );
                             },
                           ),
                         ],
